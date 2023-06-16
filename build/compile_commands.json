@@ -1,0 +1,182 @@
+[
+{
+  "directory": "/home/charon/rmdb/build/src",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/rmdb.dir/rmdb.cpp.o -c /home/charon/rmdb/src/rmdb.cpp",
+  "file": "/home/charon/rmdb/src/rmdb.cpp",
+  "output": "src/CMakeFiles/rmdb.dir/rmdb.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -isystem /home/charon/rmdb/deps/googletest/googletest/include -isystem /home/charon/rmdb/deps/googletest/googletest -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/unit_test.dir/unit_test.cpp.o -c /home/charon/rmdb/src/unit_test.cpp",
+  "file": "/home/charon/rmdb/src/unit_test.cpp",
+  "output": "src/CMakeFiles/unit_test.dir/unit_test.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/analyze",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/analyze.dir/analyze.cpp.o -c /home/charon/rmdb/src/analyze/analyze.cpp",
+  "file": "/home/charon/rmdb/src/analyze/analyze.cpp",
+  "output": "src/analyze/CMakeFiles/analyze.dir/analyze.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/record",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/record.dir/rm_file_handle.cpp.o -c /home/charon/rmdb/src/record/rm_file_handle.cpp",
+  "file": "/home/charon/rmdb/src/record/rm_file_handle.cpp",
+  "output": "src/record/CMakeFiles/record.dir/rm_file_handle.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/record",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/record.dir/rm_scan.cpp.o -c /home/charon/rmdb/src/record/rm_scan.cpp",
+  "file": "/home/charon/rmdb/src/record/rm_scan.cpp",
+  "output": "src/record/CMakeFiles/record.dir/rm_scan.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/record",
+  "command": "/usr/bin/g++ -Drecords_EXPORTS -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -fPIC -o CMakeFiles/records.dir/rm_file_handle.cpp.o -c /home/charon/rmdb/src/record/rm_file_handle.cpp",
+  "file": "/home/charon/rmdb/src/record/rm_file_handle.cpp",
+  "output": "src/record/CMakeFiles/records.dir/rm_file_handle.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/record",
+  "command": "/usr/bin/g++ -Drecords_EXPORTS -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -fPIC -o CMakeFiles/records.dir/rm_scan.cpp.o -c /home/charon/rmdb/src/record/rm_scan.cpp",
+  "file": "/home/charon/rmdb/src/record/rm_scan.cpp",
+  "output": "src/record/CMakeFiles/records.dir/rm_scan.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/index",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/index.dir/ix_index_handle.cpp.o -c /home/charon/rmdb/src/index/ix_index_handle.cpp",
+  "file": "/home/charon/rmdb/src/index/ix_index_handle.cpp",
+  "output": "src/index/CMakeFiles/index.dir/ix_index_handle.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/index",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/index.dir/ix_scan.cpp.o -c /home/charon/rmdb/src/index/ix_scan.cpp",
+  "file": "/home/charon/rmdb/src/index/ix_scan.cpp",
+  "output": "src/index/CMakeFiles/index.dir/ix_scan.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/system",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/system.dir/sm_manager.cpp.o -c /home/charon/rmdb/src/system/sm_manager.cpp",
+  "file": "/home/charon/rmdb/src/system/sm_manager.cpp",
+  "output": "src/system/CMakeFiles/system.dir/sm_manager.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/execution",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/execution.dir/execution_manager.cpp.o -c /home/charon/rmdb/src/execution/execution_manager.cpp",
+  "file": "/home/charon/rmdb/src/execution/execution_manager.cpp",
+  "output": "src/execution/CMakeFiles/execution.dir/execution_manager.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/parser",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/parser.dir/yacc.tab.cpp.o -c /home/charon/rmdb/src/parser/yacc.tab.cpp",
+  "file": "/home/charon/rmdb/src/parser/yacc.tab.cpp",
+  "output": "src/parser/CMakeFiles/parser.dir/yacc.tab.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/parser",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/parser.dir/lex.yy.cpp.o -c /home/charon/rmdb/src/parser/lex.yy.cpp",
+  "file": "/home/charon/rmdb/src/parser/lex.yy.cpp",
+  "output": "src/parser/CMakeFiles/parser.dir/lex.yy.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/parser",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/parser.dir/ast.cpp.o -c /home/charon/rmdb/src/parser/ast.cpp",
+  "file": "/home/charon/rmdb/src/parser/ast.cpp",
+  "output": "src/parser/CMakeFiles/parser.dir/ast.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/parser",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/test_parser.dir/test_parser.cpp.o -c /home/charon/rmdb/src/parser/test_parser.cpp",
+  "file": "/home/charon/rmdb/src/parser/test_parser.cpp",
+  "output": "src/parser/CMakeFiles/test_parser.dir/test_parser.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/optimizer",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/planner.dir/planner.cpp.o -c /home/charon/rmdb/src/optimizer/planner.cpp",
+  "file": "/home/charon/rmdb/src/optimizer/planner.cpp",
+  "output": "src/optimizer/CMakeFiles/planner.dir/planner.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/storage",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/storage.dir/disk_manager.cpp.o -c /home/charon/rmdb/src/storage/disk_manager.cpp",
+  "file": "/home/charon/rmdb/src/storage/disk_manager.cpp",
+  "output": "src/storage/CMakeFiles/storage.dir/disk_manager.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/storage",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/storage.dir/buffer_pool_manager.cpp.o -c /home/charon/rmdb/src/storage/buffer_pool_manager.cpp",
+  "file": "/home/charon/rmdb/src/storage/buffer_pool_manager.cpp",
+  "output": "src/storage/CMakeFiles/storage.dir/buffer_pool_manager.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/storage",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/storage.dir/__/replacer/lru_replacer.cpp.o -c /home/charon/rmdb/src/replacer/lru_replacer.cpp",
+  "file": "/home/charon/rmdb/src/replacer/lru_replacer.cpp",
+  "output": "src/storage/CMakeFiles/storage.dir/__/replacer/lru_replacer.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/replacer",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/lru_replacer.dir/lru_replacer.cpp.o -c /home/charon/rmdb/src/replacer/lru_replacer.cpp",
+  "file": "/home/charon/rmdb/src/replacer/lru_replacer.cpp",
+  "output": "src/replacer/CMakeFiles/lru_replacer.dir/lru_replacer.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/transaction",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/transaction.dir/concurrency/lock_manager.cpp.o -c /home/charon/rmdb/src/transaction/concurrency/lock_manager.cpp",
+  "file": "/home/charon/rmdb/src/transaction/concurrency/lock_manager.cpp",
+  "output": "src/transaction/CMakeFiles/transaction.dir/concurrency/lock_manager.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/transaction",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/transaction.dir/transaction_manager.cpp.o -c /home/charon/rmdb/src/transaction/transaction_manager.cpp",
+  "file": "/home/charon/rmdb/src/transaction/transaction_manager.cpp",
+  "output": "src/transaction/CMakeFiles/transaction.dir/transaction_manager.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/recovery",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/recovery.dir/log_manager.cpp.o -c /home/charon/rmdb/src/recovery/log_manager.cpp",
+  "file": "/home/charon/rmdb/src/recovery/log_manager.cpp",
+  "output": "src/recovery/CMakeFiles/recovery.dir/log_manager.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/recovery",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -o CMakeFiles/recovery.dir/log_recovery.cpp.o -c /home/charon/rmdb/src/recovery/log_recovery.cpp",
+  "file": "/home/charon/rmdb/src/recovery/log_recovery.cpp",
+  "output": "src/recovery/CMakeFiles/recovery.dir/log_recovery.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/recovery",
+  "command": "/usr/bin/g++ -Drecoverys_EXPORTS -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -fPIC -o CMakeFiles/recoverys.dir/log_manager.cpp.o -c /home/charon/rmdb/src/recovery/log_manager.cpp",
+  "file": "/home/charon/rmdb/src/recovery/log_manager.cpp",
+  "output": "src/recovery/CMakeFiles/recoverys.dir/log_manager.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/src/recovery",
+  "command": "/usr/bin/g++ -Drecoverys_EXPORTS -I/home/charon/rmdb/src -Wall -O0 -g -ggdb3 -g -O0 -g -std=gnu++1z -fPIC -o CMakeFiles/recoverys.dir/log_recovery.cpp.o -c /home/charon/rmdb/src/recovery/log_recovery.cpp",
+  "file": "/home/charon/rmdb/src/recovery/log_recovery.cpp",
+  "output": "src/recovery/CMakeFiles/recoverys.dir/log_recovery.cpp.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/deps/googletest/googlemock",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/deps/googletest/googlemock/include -I/home/charon/rmdb/deps/googletest/googlemock -isystem /home/charon/rmdb/deps/googletest/googletest/include -isystem /home/charon/rmdb/deps/googletest/googletest -Wall -O0 -g -ggdb3 -g -O0 -g -std=c++1z -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /home/charon/rmdb/deps/googletest/googlemock/src/gmock-all.cc",
+  "file": "/home/charon/rmdb/deps/googletest/googlemock/src/gmock-all.cc",
+  "output": "deps/googletest/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/deps/googletest/googlemock",
+  "command": "/usr/bin/g++  -isystem /home/charon/rmdb/deps/googletest/googlemock/include -isystem /home/charon/rmdb/deps/googletest/googlemock -isystem /home/charon/rmdb/deps/googletest/googletest/include -isystem /home/charon/rmdb/deps/googletest/googletest -Wall -O0 -g -ggdb3 -g -O0 -g -std=c++1z -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /home/charon/rmdb/deps/googletest/googlemock/src/gmock_main.cc",
+  "file": "/home/charon/rmdb/deps/googletest/googlemock/src/gmock_main.cc",
+  "output": "deps/googletest/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/deps/googletest/googletest",
+  "command": "/usr/bin/g++  -I/home/charon/rmdb/deps/googletest/googletest/include -I/home/charon/rmdb/deps/googletest/googletest -Wall -O0 -g -ggdb3 -g -O0 -g -std=c++1z -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /home/charon/rmdb/deps/googletest/googletest/src/gtest-all.cc",
+  "file": "/home/charon/rmdb/deps/googletest/googletest/src/gtest-all.cc",
+  "output": "deps/googletest/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o"
+},
+{
+  "directory": "/home/charon/rmdb/build/deps/googletest/googletest",
+  "command": "/usr/bin/g++  -isystem /home/charon/rmdb/deps/googletest/googletest/include -isystem /home/charon/rmdb/deps/googletest/googletest -Wall -O0 -g -ggdb3 -g -O0 -g -std=c++1z -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /home/charon/rmdb/deps/googletest/googletest/src/gtest_main.cc",
+  "file": "/home/charon/rmdb/deps/googletest/googletest/src/gtest_main.cc",
+  "output": "deps/googletest/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o"
+}
+]
