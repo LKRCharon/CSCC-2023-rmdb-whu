@@ -20,18 +20,14 @@ struct PageId {
     page_id_t page_no = INVALID_PAGE_ID;
 
     friend bool operator==(const PageId &x, const PageId &y) { return x.fd == y.fd && x.page_no == y.page_no; }
-    bool operator<(const PageId& x) const {
-        if(fd < x.fd) return true;
+    bool operator<(const PageId &x) const {
+        if (fd < x.fd) return true;
         return page_no < x.page_no;
     }
 
-    std::string toString() {
-        return "{fd: " + std::to_string(fd) + " page_no: " + std::to_string(page_no) + "}"; 
-    }
+    std::string toString() { return "{fd: " + std::to_string(fd) + " page_no: " + std::to_string(page_no) + "}"; }
 
-    inline int64_t Get() const {
-        return (static_cast<int64_t>(fd << 16) | page_no);
-    }
+    inline int64_t Get() const { return (static_cast<int64_t>(fd << 16) | page_no); }
 };
 
 // PageId的自定义哈希算法, 用于构建unordered_map<PageId, frame_id_t, PageIdHash>
@@ -52,9 +48,7 @@ class Page {
     friend class BufferPoolManager;
 
    public:
-    
     Page() { reset_memory(); }
-
     ~Page() = default;
 
     PageId get_page_id() const { return id_; }
@@ -67,7 +61,7 @@ class Page {
     static constexpr size_t OFFSET_LSN = 0;
     static constexpr size_t OFFSET_PAGE_HDR = 4;
 
-    inline lsn_t get_page_lsn() { return *reinterpret_cast<lsn_t *>(get_data() + OFFSET_LSN) ; }
+    inline lsn_t get_page_lsn() { return *reinterpret_cast<lsn_t *>(get_data() + OFFSET_LSN); }
 
     inline void set_page_lsn(lsn_t page_lsn) { memcpy(get_data() + OFFSET_LSN, &page_lsn, sizeof(lsn_t)); }
 
