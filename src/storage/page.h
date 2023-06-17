@@ -52,7 +52,7 @@ class Page {
     ~Page() = default;
 
     PageId get_page_id() const { return id_; }
-
+    inline void set_page_id(PageId id) { id_ = id; }
     inline char *get_data() { return data_; }
 
     bool is_dirty() const { return is_dirty_; }

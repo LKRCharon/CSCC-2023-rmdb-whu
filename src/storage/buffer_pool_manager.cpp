@@ -40,13 +40,16 @@ bool BufferPoolManager::find_victim_page(frame_id_t* frame_id) {
 void BufferPoolManager::update_page(Page* page, PageId new_page_id, frame_id_t new_frame_id) {
     // Todo:
     // 1 如果是脏页，写回磁盘，并且把dirty置为false
-    // 3 重置page的data，更新page id
     if (page->is_dirty_) {
         flush_page(page->get_page_id());
         page->is_dirty_ = false;
     }
     // 2 更新page table
     page_table_.erase(page->get_page_id());
+    page_table_.emplace(new_page_id,new_frame_id);
+    // 3 重置page的data，更新page id
+    page->reset_memory();
+    page->set_page_id(new_page_id);
 }
 
 /**
@@ -181,9 +184,26 @@ Page* BufferPoolManager::new_page(PageId* page_id) {
  */
 bool BufferPoolManager::delete_page(PageId page_id) {
     // 1.   在page_table_中查找目标页，若不存在返回true
+    auto iter = page_table_.find(page_id);
+    if(iter == page_table_.end()){
+        return true;
+    }
     // 2.   若目标页的pin_count不为0，则返回false
-    // 3.   将目标页数据写回磁盘，从页表中删除目标页，重置其元数据，将其加入free_list_，返回true
-
+    auto page = pages_+ iter->second;
+    if(page->pin_count_>0){
+        return false;
+    }
+    // 3.1  将目标页数据写回磁盘，
+    disk_manager_->write_page(page_id.fd, page_id.page_no, page->data_, PAGE_SIZE);
+    // 3.2 从页表中删除目标页
+    page_table_.erase(page_id);
+    // 3.3 重置元数据 最佳方法是什么？
+    page->set_page_id({});
+    page->is_dirty_=false;
+    page->pin_count_=0;
+    page->reset_memory();
+    // 3.4加入free_list_
+    free_list_.push_back(iter->second);
     return true;
 }
 
@@ -191,4 +211,9 @@ bool BufferPoolManager::delete_page(PageId page_id) {
  * @description: 将buffer_pool中的所有页写回到磁盘
  * @param {int} fd 文件句柄
  */
-void BufferPoolManager::flush_all_pages(int fd) {}
+void BufferPoolManager::flush_all_pages(int fd) {
+    for(const auto & pair : page_table_){
+        auto page = pair.second + pages_;
+        disk_manager_->write_page(fd, page->get_page_id().page_no, page->data_, PAGE_SIZE);
+    }
+}
