@@ -18,15 +18,14 @@ See the Mulan PSL v2 for more details. */
 bool BufferPoolManager::find_victim_page(frame_id_t* frame_id) {
     // Todo:
     // 1 使用BufferPoolManager::free_list_判断缓冲池是否已满需要淘汰页面
-    // 1.1 未满获得frame
-    // 1.2 已满使用lru_replacer中的方法选择淘汰页面
 
     if (!free_list_.empty()) {
-        // 不满
+    // 1.1 未满获得frame
         *frame_id = free_list_.front();
         free_list_.pop_front();
         return true;
     }
+    // 1.2 已满使用lru_replacer中的方法选择淘汰页面
     return replacer_->victim(frame_id);
 }
 
@@ -212,8 +211,10 @@ bool BufferPoolManager::delete_page(PageId page_id) {
  * @param {int} fd 文件句柄
  */
 void BufferPoolManager::flush_all_pages(int fd) {
+    std::scoped_lock lock{latch_};
     for(const auto & pair : page_table_){
         auto page = pair.second + pages_;
         disk_manager_->write_page(fd, page->get_page_id().page_no, page->data_, PAGE_SIZE);
+        page->is_dirty_ = false;
     }
 }

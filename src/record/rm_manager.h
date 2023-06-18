@@ -20,11 +20,11 @@ See the Mulan PSL v2 for more details. */
 class RmManager {
    private:
     DiskManager *disk_manager_;
-    BufferPoolManager *buffer_pool_manager_;
+    BufferPoolManager *bpm_;
 
    public:
     RmManager(DiskManager *disk_manager, BufferPoolManager *buffer_pool_manager)
-        : disk_manager_(disk_manager), buffer_pool_manager_(buffer_pool_manager) {}
+        : disk_manager_(disk_manager), bpm_(buffer_pool_manager) {}
 
     /**
      * @description: 创建表的数据文件并初始化相关信息
@@ -68,7 +68,7 @@ class RmManager {
      */
     std::unique_ptr<RmFileHandle> open_file(const std::string& filename) {
         int fd = disk_manager_->open_file(filename);
-        return std::make_unique<RmFileHandle>(disk_manager_, buffer_pool_manager_, fd);
+        return std::make_unique<RmFileHandle>(disk_manager_, bpm_, fd);
     }
     /**
      * @description: 关闭表的数据文件
@@ -78,7 +78,7 @@ class RmManager {
         disk_manager_->write_page(file_handle->fd_, RM_FILE_HDR_PAGE, (char *)&file_handle->file_hdr_,
                                   sizeof(file_handle->file_hdr_));
         // 缓冲区的所有页刷到磁盘，注意这句话必须写在close_file前面
-        buffer_pool_manager_->flush_all_pages(file_handle->fd_);
+        bpm_->flush_all_pages(file_handle->fd_);
         disk_manager_->close_file(file_handle->fd_);
     }
 };

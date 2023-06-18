@@ -47,13 +47,13 @@ class RmFileHandle {
 
    private:
     DiskManager *disk_manager_;
-    BufferPoolManager *buffer_pool_manager_;
+    BufferPoolManager *bpm_;
     int fd_;        // 打开文件后产生的文件句柄
     RmFileHdr file_hdr_;    // 文件头，维护当前表文件的元数据
 
    public:
     RmFileHandle(DiskManager *disk_manager, BufferPoolManager *buffer_pool_manager, int fd)
-        : disk_manager_(disk_manager), buffer_pool_manager_(buffer_pool_manager), fd_(fd) {
+        : disk_manager_(disk_manager), bpm_(buffer_pool_manager), fd_(fd) {
         // 注意：这里从磁盘中读出文件描述符为fd的文件的file_hdr，读到内存中
         // 这里实际就是初始化file_hdr，只不过是从磁盘中读出进行初始化
         // init file_hdr_

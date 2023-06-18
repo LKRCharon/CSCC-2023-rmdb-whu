@@ -32,7 +32,7 @@ class SmManager {
     std::unordered_map<std::string, std::unique_ptr<IxIndexHandle>> ihs_;   // file name -> index file handle, 当前数据库中每个索引的文件
    private:
     DiskManager* disk_manager_;
-    BufferPoolManager* buffer_pool_manager_;
+    BufferPoolManager* bpm_;
     RmManager* rm_manager_;
     IxManager* ix_manager_;
 
@@ -40,13 +40,13 @@ class SmManager {
     SmManager(DiskManager* disk_manager, BufferPoolManager* buffer_pool_manager, RmManager* rm_manager,
               IxManager* ix_manager)
         : disk_manager_(disk_manager),
-          buffer_pool_manager_(buffer_pool_manager),
+          bpm_(buffer_pool_manager),
           rm_manager_(rm_manager),
           ix_manager_(ix_manager) {}
 
     ~SmManager() {}
 
-    BufferPoolManager* get_bpm() { return buffer_pool_manager_; }
+    BufferPoolManager* get_bpm() { return bpm_; }
 
     RmManager* get_rm_manager() { return rm_manager_; }  
 

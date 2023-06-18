@@ -20,11 +20,11 @@ See the Mulan PSL v2 for more details. */
 class IxManager {
    private:
     DiskManager *disk_manager_;
-    BufferPoolManager *buffer_pool_manager_;
+    BufferPoolManager *bpm_;
 
    public:
     IxManager(DiskManager *disk_manager, BufferPoolManager *buffer_pool_manager)
-        : disk_manager_(disk_manager), buffer_pool_manager_(buffer_pool_manager) {}
+        : disk_manager_(disk_manager), bpm_(buffer_pool_manager) {}
 
     std::string get_index_name(const std::string &filename, const std::vector<std::string>& index_cols) {
         std::string index_name = filename;
@@ -147,13 +147,13 @@ class IxManager {
     std::unique_ptr<IxIndexHandle> open_index(const std::string &filename, const std::vector<ColMeta>& index_cols) {
         std::string ix_name = get_index_name(filename, index_cols);
         int fd = disk_manager_->open_file(ix_name);
-        return std::make_unique<IxIndexHandle>(disk_manager_, buffer_pool_manager_, fd);
+        return std::make_unique<IxIndexHandle>(disk_manager_, bpm_, fd);
     }
 
     std::unique_ptr<IxIndexHandle> open_index(const std::string &filename, const std::vector<std::string>& index_cols) {
         std::string ix_name = get_index_name(filename, index_cols);
         int fd = disk_manager_->open_file(ix_name);
-        return std::make_unique<IxIndexHandle>(disk_manager_, buffer_pool_manager_, fd);
+        return std::make_unique<IxIndexHandle>(disk_manager_, bpm_, fd);
     }
 
     void close_index(const IxIndexHandle *ih) {
@@ -161,7 +161,7 @@ class IxManager {
         ih->file_hdr_->serialize(data);
         disk_manager_->write_page(ih->fd_, IX_FILE_HDR_PAGE, data, ih->file_hdr_->tot_len_);
         // 缓冲区的所有页刷到磁盘，注意这句话必须写在close_file前面
-        buffer_pool_manager_->flush_all_pages(ih->fd_);
+        bpm_->flush_all_pages(ih->fd_);
         disk_manager_->close_file(ih->fd_);
     }
 };
