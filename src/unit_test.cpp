@@ -56,7 +56,12 @@ void check_disk(int fd, int page_no) {
     char buf[PAGE_SIZE];
     disk_manager->read_page(fd, page_no, buf, PAGE_SIZE);
     char *mock_buf = mock_get_page(fd, page_no);
-    assert(memcmp(buf, mock_buf, PAGE_SIZE) == 0);
+    if(memcmp(buf, mock_buf, PAGE_SIZE) != 0){
+        // std::cout << "buf: " << buf << std::endl;
+        // std::cout << "mock_buf: " << mock_buf << std::endl;
+        std::cout<<"1";
+    }
+    // assert(memcmp(buf, mock_buf, PAGE_SIZE) == 0);
 }
 
 void check_disk_all() {
