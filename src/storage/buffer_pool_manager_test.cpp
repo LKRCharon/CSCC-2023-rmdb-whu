@@ -313,13 +313,14 @@ TEST_F(BufferPoolManagerTest, ConcurrencyTest) {
 
         PageId tmp_page_id = {.fd = fd, .page_no = INVALID_PAGE_ID};
         std::vector<PageId> page_ids;
+        // new 50 pages 写入
         for (int i = 0; i < buffer_pool_size; i++) {
             auto *new_page = bpm->new_page(&tmp_page_id);
             EXPECT_NE(nullptr, new_page);
             strcpy(new_page->get_data(), std::to_string(tmp_page_id.page_no).c_str());
             page_ids.push_back(tmp_page_id);
         }
-
+        // unpin 50 pages， even set dirty
         for (int i = 0; i < buffer_pool_size; i++) {
             if (i % 2 == 0) {
                 EXPECT_EQ(true, bpm->unpin_page(page_ids[i], true));
@@ -327,7 +328,7 @@ TEST_F(BufferPoolManagerTest, ConcurrencyTest) {
                 EXPECT_EQ(true, bpm->unpin_page(page_ids[i], false));
             }
         }
-
+        //  new 50 pages
         for (int i = 0; i < buffer_pool_size; i++) {
             auto *new_page = bpm->new_page(&tmp_page_id);
             EXPECT_NE(nullptr, new_page);
@@ -427,3 +428,4 @@ TEST_F(BufferPoolManagerTest, ConcurrencyTest) {
 
     disk_manager_->close_file(fd);
 }
+

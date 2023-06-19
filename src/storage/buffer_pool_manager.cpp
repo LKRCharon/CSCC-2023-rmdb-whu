@@ -67,7 +67,7 @@ Page* BufferPoolManager::fetch_page(PageId page_id) {
         // 1.1    若目标页有被page_table_记录，则将其所在frame固定(pin)，并返回目标页。
         auto page = pages_ + iter->second;
         replacer_->pin(iter->second);
-        page->pin_count_ ++;
+        page->pin_count_++;
         return page;
     }
     // 1.2    否则，尝试调用find_victim_page获得一个可用的frame，若失败则返回nullptr
@@ -113,7 +113,7 @@ bool BufferPoolManager::unpin_page(PageId page_id, bool is_dirty) {
     }
     // 2.2 若pin_count_大于0，则pin_count_自减一
     // 2.2.1 若自减后等于0，则调用replacer_的Unpin
-    if (--page->pin_count_==0) {
+    if (--page->pin_count_ == 0) {
         replacer_->unpin(iter->second);
     }
     // 3 根据参数is_dirty，更改P的is_dirty_
@@ -159,12 +159,14 @@ Page* BufferPoolManager::new_page(PageId* page_id) {
     page_id->page_no = disk_manager_->allocate_page(page_id->fd);  //一个page_id 有fd和pageno两个属性
     page_table_.emplace(*page_id, frame_id);
 
-    // 3.   将frame的数据写回磁盘
+    // 3. 处理旧page
     auto page = pages_ + frame_id;
+    // 3.1 从页表里删掉
+    auto old_page_id = page->get_page_id();
+    page_table_.erase(old_page_id);
+    // 3.1  如果dirty，将frame的数据写回磁盘
     if (page->is_dirty()) {
-        auto old_page_id = page->get_page_id();
         disk_manager_->write_page(old_page_id.fd, old_page_id.page_no, page->data_, PAGE_SIZE);
-        page_table_.erase(old_page_id);
         page->is_dirty_ = false;
     }
     page->reset_memory();
@@ -216,7 +218,12 @@ void BufferPoolManager::flush_all_pages(int fd) {
     std::scoped_lock lock{latch_};
     for (const auto& pair : page_table_) {
         auto page = pair.second + pages_;
-        disk_manager_->write_page(fd, pair.first.page_no, page->data_, PAGE_SIZE);
-        page->is_dirty_ = false;
+        // 要加一个fd的判断 参考自rucbase的函数
+        if (page->get_page_id().fd == fd) {
+            disk_manager_->write_page(fd, pair.first.page_no, page->get_data(), PAGE_SIZE);
+            page->is_dirty_ = false;
+        }
     }
+
+    // ref：https://github.com/ruc-deke/rucbase-lab/blob/main/src/storage/buffer_pool_manager.cpp
 }

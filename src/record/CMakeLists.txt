@@ -4,5 +4,5 @@ add_library(records SHARED ${SOURCES})
 target_link_libraries(record system transaction system storage)
 
 # rm_gtest
-add_executable(rm_gtest rm_gtest.cpp)
-target_link_libraries(rm_gtest record gtest_main)
+add_executable(rm_test rm_test.cpp)
+target_link_libraries(rm_test record gtest_main)

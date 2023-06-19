@@ -56,12 +56,7 @@ void check_disk(int fd, int page_no) {
     char buf[PAGE_SIZE];
     disk_manager->read_page(fd, page_no, buf, PAGE_SIZE);
     char *mock_buf = mock_get_page(fd, page_no);
-    if(memcmp(buf, mock_buf, PAGE_SIZE) != 0){
-        // std::cout << "buf: " << buf << std::endl;
-        // std::cout << "mock_buf: " << mock_buf << std::endl;
-        std::cout<<"1";
-    }
-    // assert(memcmp(buf, mock_buf, PAGE_SIZE) == 0);
+    assert(memcmp(buf, mock_buf, PAGE_SIZE) == 0);
 }
 
 void check_disk_all() {
@@ -621,12 +616,13 @@ TEST(RecordManagerTest, SimpleTest) {
     size_t add_cnt = 0;
     size_t upd_cnt = 0;
     size_t del_cnt = 0;
-    for (int round = 0; round < 1000; round++) {
+    for (int round = 0; round < 10000; round++) {
         double insert_prob = 1. - mock.size() / 250.;
         double dice = rand() * 1. / RAND_MAX;
         if (mock.empty() || dice < insert_prob) {
             rand_buf(file_handle->file_hdr_.record_size, write_buf);
             Rid rid = file_handle->insert_record(write_buf, nullptr);
+
             mock[rid] = std::string((char *)write_buf, file_handle->file_hdr_.record_size);
             add_cnt++;
             //            std::cout << "insert " << rid << '\n'; // operator<<(cout,rid)

@@ -78,6 +78,14 @@ void DiskManager::read_page(int fd, page_id_t page_no, char *offset, int num_byt
  */
 page_id_t DiskManager::allocate_page(int fd) {
     // 简单的自增分配策略，指定文件的页面编号加1
+//     if (!(fd >= 0 && fd < MAX_FD)) {
+//     // 提供更多信息
+//     std::cerr << "Assertion failed: fd >= 0 && fd < MAX_FD" << std::endl;
+//     std::cerr << "fd: " << fd << ", MAX_FD: " << MAX_FD << std::endl;
+
+//     // 执行其他处理或抛出异常等
+// }
+
     assert(fd >= 0 && fd < MAX_FD);
     return fd2pageno_[fd]++;
 }

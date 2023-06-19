@@ -179,7 +179,7 @@ struct RmFileHdr {
     int num_pages;             // 文件中当前分配的page个数（初始化为1）
     int num_records_per_page;  // 每个page最多能存储的元组个数
     int first_free_page_no;    // 文件中当前第一个可用的page no（初始化为-1）
-    int bitmap_size;           // bitmap大小
+    int bitmap_size;           // bitmap大小(字节)
 };
 ```
 
