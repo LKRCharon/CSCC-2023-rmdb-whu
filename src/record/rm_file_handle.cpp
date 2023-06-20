@@ -40,12 +40,25 @@ Rid RmFileHandle::insert_record(char* buf, Context* context) {
     auto slot_no = Bitmap::first_bit(false, page_handle.bitmap, file_hdr_.num_records_per_page);
     // 3. 将buf复制到空闲slot位置
     memcpy(page_handle.get_slot(slot_no), buf, page_handle.file_hdr->record_size);
+    if (slot_no == 12 && page_handle.page->get_page_id().page_no == 3) {
+        std::cout << "3,12" << std::endl;
+    }
     // 4. 更新page_handle.page_hdr中的数据结构
     Bitmap::set(page_handle.bitmap, slot_no);
     page_handle.page_hdr->num_records++;
     // 注意考虑插入一条记录后页面已满的情况，需要更新file_hdr_.first_free_page_no
+    // 可能next也是满的
     if (page_handle.page_hdr->num_records == page_handle.file_hdr->num_records_per_page) {
-        file_hdr_.first_free_page_no = page_handle.page_hdr->next_free_page_no;  //在现在阶段 应该都是-1
+        file_hdr_.first_free_page_no = -1;
+        // file_hdr_.first_free_page_no = page_handle.page_hdr->next_free_page_no;  //在现在阶段 应该都是-1
+        // // 绷不住了 358疯狂循环
+        //  while (file_hdr_.first_free_page_no != -1) {
+        //     auto page_handle_temp = fetch_page_handle(file_hdr_.first_free_page_no);
+        //     if (page_handle_temp.page_hdr->num_records != page_handle_temp.file_hdr->num_records_per_page) {
+        //         break;
+        //     }
+        //     file_hdr_.first_free_page_no = page_handle_temp.page_hdr->next_free_page_no;
+        // }
     }
     return Rid{page_handle.page->get_page_id().page_no, slot_no};
 }
@@ -77,6 +90,7 @@ void RmFileHandle::delete_record(const Rid& rid, Context* context) {
     Bitmap::reset(page_handle.bitmap, rid.slot_no);
     page_handle.page_hdr->num_records--;
     // 注意考虑删除一条记录后页面未满的情况，需要调用release_page_handle()
+
     if (page_handle.page_hdr->num_records == page_handle.file_hdr->num_records_per_page - 1) {
         release_page_handle(page_handle);
     }
@@ -91,7 +105,8 @@ void RmFileHandle::delete_record(const Rid& rid, Context* context) {
 void RmFileHandle::update_record(const Rid& rid, char* buf, Context* context) {
     // 1. 获取指定记录所在的page handle
     auto page_handle = fetch_page_handle(rid.page_no);
-
+    // if (rid.page_no == 5 && rid.slot_no == 17) {
+    // }
     // 2. 更新记录
     auto slot = page_handle.get_slot(rid.slot_no);
     memcpy(slot, buf, page_handle.file_hdr->record_size);
@@ -156,8 +171,8 @@ void RmFileHandle::release_page_handle(RmPageHandle& page_handle) {
     // 当page从已满变成未满，考虑如何更新：
     // 1. page_handle.page_hdr->next_free_page_no
     // 2. file_hdr_.first_free_page_no
-    if (file_hdr_.first_free_page_no != RM_NO_PAGE) {
-        page_handle.page_hdr->next_free_page_no = file_hdr_.first_free_page_no;
-    }
-    file_hdr_.first_free_page_no = page_handle.page->get_page_id().page_no;
+    // if (file_hdr_.first_free_page_no != RM_NO_PAGE) {
+    //     page_handle.page_hdr->next_free_page_no = file_hdr_.first_free_page_no;
+    // }
+    // file_hdr_.first_free_page_no = page_handle.page->get_page_id().page_no;
 }

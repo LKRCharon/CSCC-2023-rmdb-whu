@@ -65,9 +65,12 @@ void check_equal(const RmFileHandle *file_handle,
     // Test RM scan
     size_t num_records = 0;
     for (RmScan scan(file_handle); !scan.is_end(); scan.next()) {
+        if (mock.count(scan.rid()) == 0) {
+            std::cout << "mock count =0:" << scan.rid().page_no<< ", " << scan.rid().slot_no<< std::endl;
+        }
         assert(mock.count(scan.rid()) > 0);
         auto rec = file_handle->get_record(scan.rid(), context);
-        // assert(memcmp(rec->data, mock.at(scan.rid()).c_str(), file_handle->file_hdr_.record_size) == 0);
+        assert(memcmp(rec->data, mock.at(scan.rid()).c_str(), file_handle->file_hdr_.record_size) == 0);
         num_records++;
     }
     assert(num_records == mock.size());
@@ -83,8 +86,8 @@ std::ostream &operator<<(std::ostream &os, const Rid &rid) {
  * @note lab1 计分：15 points
  */
 TEST(RecordManagerTest, SimpleTest) {
-    srand((unsigned)time(nullptr));
-
+    // srand((unsigned)time(nullptr));
+    std::srand(1145141919);  // debug
     char *result = new char[BUFFER_LENGTH];
     int offset = 0;
     Context *context = new Context(nullptr, nullptr, nullptr, result, &offset);
@@ -141,9 +144,12 @@ TEST(RecordManagerTest, SimpleTest) {
         if (mock.empty() || dice < insert_prob) {
             rand_buf(file_handle->file_hdr_.record_size, write_buf);
             Rid rid = file_handle->insert_record(write_buf, context);
+
             mock[rid] = std::string((char *)write_buf, file_handle->file_hdr_.record_size);
             add_cnt++;
-            //    std::cout << "insert " << rid << '\n'; // operator<<(cout,rid)
+
+            // std::cout << "insert " << rid << '\n';  // operator<<(cout,rid)
+
         } else {
             // update or erase random rid
             int rid_idx = rand() % mock.size();
@@ -158,13 +164,16 @@ TEST(RecordManagerTest, SimpleTest) {
                 file_handle->update_record(rid, write_buf, context);
                 mock[rid] = std::string((char *)write_buf, file_handle->file_hdr_.record_size);
                 upd_cnt++;
-                std::cout << "update " << rid << '\n';
+
+                // std::cout << "update " << rid << '\n';
+
             } else {
                 // erase
                 file_handle->delete_record(rid, context);
                 mock.erase(rid);
                 del_cnt++;
-                std::cout << "delete " << rid << '\n';
+
+                // std::cout << "delete " << rid << '\n';
             }
         }
         // Randomly re-open file

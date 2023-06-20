@@ -20,6 +20,9 @@ RmScan::RmScan(const RmFileHandle *file_handle) : file_handle_(file_handle) {
     rid_.page_no = 1;
     auto page_handle = file_handle_->fetch_page_handle(rid_.page_no);
     rid_.slot_no = Bitmap::first_bit(1, page_handle.bitmap, page_handle.file_hdr->num_records_per_page);
+    while(rid_.slot_no == page_handle.file_hdr->num_records_per_page){
+        next();
+    }
 }
 
 /**
