@@ -117,7 +117,10 @@ bool BufferPoolManager::unpin_page(PageId page_id, bool is_dirty) {
         replacer_->unpin(iter->second);
     }
     // 3 根据参数is_dirty，更改P的is_dirty_
-    page->is_dirty_ = is_dirty;
+    // 3.1 不会轻易把true变false
+    if (!page->is_dirty_ ) {
+        page->is_dirty_ = is_dirty;
+    }
     return true;
 }
 

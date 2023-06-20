@@ -17,7 +17,6 @@ See the Mulan PSL v2 for more details. */
  * @return {unique_ptr<RmRecord>} rid对应的记录对象指针
  */
 std::unique_ptr<RmRecord> RmFileHandle::get_record(const Rid& rid, Context* context) const {
-    // Todo:
     // 1. 获取指定记录所在的page handle
     // 2. 初始化一个指向RmRecord的指针（赋值其内部的data和size）
     auto page_handle = fetch_page_handle(rid.page_no);
