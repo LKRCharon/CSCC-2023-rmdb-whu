@@ -78,14 +78,6 @@ void DiskManager::read_page(int fd, page_id_t page_no, char *offset, int num_byt
  */
 page_id_t DiskManager::allocate_page(int fd) {
     // 简单的自增分配策略，指定文件的页面编号加1
-//     if (!(fd >= 0 && fd < MAX_FD)) {
-//     // 提供更多信息
-//     std::cerr << "Assertion failed: fd >= 0 && fd < MAX_FD" << std::endl;
-//     std::cerr << "fd: " << fd << ", MAX_FD: " << MAX_FD << std::endl;
-
-//     // 执行其他处理或抛出异常等
-// }
-
     assert(fd >= 0 && fd < MAX_FD);
     return fd2pageno_[fd]++;
 }
@@ -131,14 +123,17 @@ bool DiskManager::is_file(const std::string &path) {
 void DiskManager::create_file(const std::string &path) {
     // 调用open()函数，使用O_CREAT模式
     // 注意不能重复创建相同文件
+    if (is_file(path)) {
+        throw FileExistsError(path);
+    }
     int flags = O_CREAT | O_EXCL | O_WRONLY;
-    int mode =  S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-    int fd = open(path.c_str(), flags,mode);
+    int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+    int fd = open(path.c_str(), flags, mode);
     if (fd == -1) {
         throw FileExistsError(path);
-    } else {
-        close(fd);
     }
+
+    close(fd);
 }
 
 /**
@@ -151,7 +146,6 @@ void DiskManager::destroy_file(const std::string &path) {
     if (!is_file(path)) {
         throw FileNotFoundError(path);
     }
-
     if (path2fd_.count(path) > 0) {
         throw FileNotClosedError(path);
     }
@@ -172,13 +166,11 @@ int DiskManager::open_file(const std::string &path) {
     // 调用open()函数，使用O_RDWR模式
     // 注意不能重复打开相同文件，并且需要更新文件打开列表
 
-    int flags = O_RDWR;
-
     // 没创建就打开：抛出异常
     if (!is_file(path)) {
         throw FileNotFoundError(path);
     }
-
+    int flags = O_RDWR;
     int fd = open(path.c_str(), flags);
     if (fd == -1) {
         std::cout << "Open File Error: " << strerror(errno) << std::endl;

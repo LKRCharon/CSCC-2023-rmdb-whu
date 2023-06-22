@@ -17,12 +17,9 @@ See the Mulan PSL v2 for more details. */
  */
 RmScan::RmScan(const RmFileHandle *file_handle) : file_handle_(file_handle) {
     // 初始化file_handle和rid（指向第一个存放了记录的位置）
-    rid_.page_no = 1;
-    auto page_handle = file_handle_->fetch_page_handle(rid_.page_no);
-    rid_.slot_no = Bitmap::first_bit(1, page_handle.bitmap, page_handle.file_hdr->num_records_per_page);
-    while(rid_.slot_no == page_handle.file_hdr->num_records_per_page){
-        next();
-    }
+    rid_.page_no = RM_FIRST_RECORD_PAGE;
+    rid_.slot_no = -1;
+    next();
 }
 
 /**
@@ -30,27 +27,24 @@ RmScan::RmScan(const RmFileHandle *file_handle) : file_handle_(file_handle) {
  */
 void RmScan::next() {
     // 找到文件中下一个存放了记录的非空闲位置，用rid_来指向这个位置
-    auto page_handle = file_handle_->fetch_page_handle(rid_.page_no);
-
-    rid_.slot_no =
-        Bitmap::next_bit(true, page_handle.bitmap, file_handle_->file_hdr_.num_records_per_page, rid_.slot_no);
-    while (rid_.slot_no == file_handle_->file_hdr_.num_records_per_page) {
-        rid_.page_no++;
-        if (rid_.page_no >= file_handle_->file_hdr_.num_pages) {
-            break;
+    auto max_n = file_handle_->file_hdr_.num_records_per_page;
+    while (rid_.page_no < file_handle_->file_hdr_.num_pages) {
+        auto page_handle = file_handle_->fetch_page_handle(rid_.page_no);
+        rid_.slot_no = Bitmap::next_bit(true, page_handle.bitmap, max_n, rid_.slot_no);
+        // 本页找到空slot
+        if (rid_.slot_no < max_n) {
+            return;
         }
-        page_handle = file_handle_->fetch_page_handle(rid_.page_no);
-        rid_.slot_no = Bitmap::first_bit(1, page_handle.bitmap, page_handle.file_hdr->num_records_per_page);
+        rid_.slot_no = -1;
+        rid_.page_no++;
     }
+    // 找不到
 }
 
 /**
  * @brief ​ 判断是否到达文件末尾
  */
-bool RmScan::is_end() const {
-    // Todo: 修改返回值
-    return (rid_.page_no >= file_handle_->file_hdr_.num_pages);
-}
+bool RmScan::is_end() const { return (rid_.page_no >= file_handle_->file_hdr_.num_pages); }
 
 /**
  * @brief RmScan内部存放的rid

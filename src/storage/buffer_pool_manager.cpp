@@ -10,6 +10,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "buffer_pool_manager.h"
 
+#include "common/logger.h"
 /**
  * @description: 从free_list或replacer中得到可淘汰帧页的 *frame_id
  * @return {bool} true: 可替换帧查找成功 , false: 可替换帧查找失败
@@ -44,6 +45,9 @@ void BufferPoolManager::update_page(Page* page, PageId new_page_id, frame_id_t n
     }
     // 2 更新page table
     page_table_.erase(page->get_page_id());
+    if (new_page_id.page_no == INVALID_PAGE_ID) {
+        LOG_DEBUG("update invalid page id");
+    }
     page_table_.emplace(new_page_id, new_frame_id);
     // 3 重置page的data，更新page id
     page->reset_memory();
@@ -118,7 +122,7 @@ bool BufferPoolManager::unpin_page(PageId page_id, bool is_dirty) {
     }
     // 3 根据参数is_dirty，更改P的is_dirty_
     // 3.1 不会轻易把true变false
-    if (!page->is_dirty_ ) {
+    if (!page->is_dirty_) {
         page->is_dirty_ = is_dirty;
     }
     return true;

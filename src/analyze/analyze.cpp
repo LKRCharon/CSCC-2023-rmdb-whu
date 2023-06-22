@@ -23,6 +23,7 @@ std::shared_ptr<Query> Analyze::do_analyze(std::shared_ptr<ast::TreeNode> parse)
         // 处理表名
         query->tables = std::move(x->tabs);
         /** TODO: 检查表是否存在 */
+        // if(query->tables)
 
         // 处理target list，再target list中添加上表名，例如 a.id
         for (auto &sv_sel_col : x->cols) {
