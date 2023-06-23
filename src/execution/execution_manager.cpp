@@ -153,7 +153,8 @@ void QlManager::select_from(std::unique_ptr<AbstractExecutor> executorTreeRoot, 
     // Print records
     size_t num_rec = 0;
     // 执行query_plan
-    for (executorTreeRoot->beginTuple(); !executorTreeRoot->is_end(); executorTreeRoot->nextTuple()) {
+    executorTreeRoot->beginTuple();
+    while (!executorTreeRoot->is_end()) {
         auto Tuple = executorTreeRoot->Next();
         std::vector<std::string> columns;
         for (auto &col : executorTreeRoot->cols()) {
@@ -162,7 +163,7 @@ void QlManager::select_from(std::unique_ptr<AbstractExecutor> executorTreeRoot, 
             if (col.type == TYPE_INT) {
                 col_str = std::to_string(*(int *)rec_buf);
             } else if (col.type == TYPE_FLOAT) {
-                col_str = std::to_string(*(float *)rec_buf);
+                col_str = std::to_string(*(double *)rec_buf);
             } else if (col.type == TYPE_STRING) {
                 col_str = std::string((char *)rec_buf, col.len);
                 col_str.resize(strlen(col_str.c_str()));
@@ -178,6 +179,7 @@ void QlManager::select_from(std::unique_ptr<AbstractExecutor> executorTreeRoot, 
         }
         outfile << "\n";
         num_rec++;
+        executorTreeRoot->nextTuple();
     }
     outfile.close();
     // Print footer into buffer
