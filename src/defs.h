@@ -78,7 +78,7 @@ inline std::string plantag2str(PlanTag tag) {
                                         {T_DropIndex, "DropIndex"},
                                         {T_Insert, "Insert"},
                                         {T_Update, "Update"},
-                                        {T_Update, "Update"},
+                                        {T_Delete, "delete"},
                                         {T_select, "select"},
                                         {T_Transaction_begin, "Transaction_begin"},
                                         {T_Transaction_commit, "Transaction_commit"},

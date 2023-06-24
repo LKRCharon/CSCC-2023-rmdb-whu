@@ -1,0 +1,3 @@
+| Tables |
+| name | id | score |
+| Data | 1 | 90.500000 |
