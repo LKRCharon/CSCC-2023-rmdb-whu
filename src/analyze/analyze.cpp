@@ -13,13 +13,11 @@ See the Mulan PSL v2 for more details. */
 /**
  * @description: 分析器，进行语义分析和查询重写，需要检查不符合语义规定的部分
  * @param {shared_ptr<ast::TreeNode>} parse parser生成的结果集
- * @return {shared_ptr<Query>} Query 
+ * @return {shared_ptr<Query>} Query
  */
-std::shared_ptr<Query> Analyze::do_analyze(std::shared_ptr<ast::TreeNode> parse)
-{
+std::shared_ptr<Query> Analyze::do_analyze(std::shared_ptr<ast::TreeNode> parse) {
     std::shared_ptr<Query> query = std::make_shared<Query>();
-    if (auto x = std::dynamic_pointer_cast<ast::SelectStmt>(parse))
-    {
+    if (auto x = std::dynamic_pointer_cast<ast::SelectStmt>(parse)) {
         // 处理表名
         query->tables = std::move(x->tabs);
         /** TODO: 检查表是否存在 */
@@ -30,7 +28,7 @@ std::shared_ptr<Query> Analyze::do_analyze(std::shared_ptr<ast::TreeNode> parse)
             TabCol sel_col = {.tab_name = sv_sel_col->tab_name, .col_name = sv_sel_col->col_name};
             query->cols.push_back(sel_col);
         }
-        
+
         std::vector<ColMeta> all_cols;
         get_all_cols(query->tables, all_cols);
         if (query->cols.empty()) {
@@ -50,11 +48,25 @@ std::shared_ptr<Query> Analyze::do_analyze(std::shared_ptr<ast::TreeNode> parse)
         check_clause(query->tables, query->conds);
     } else if (auto x = std::dynamic_pointer_cast<ast::UpdateStmt>(parse)) {
         /** TODO: */
+        //处理where条件
+
+        get_clause(x->conds, query->conds);
+        check_clause({x->tab_name}, query->conds);
+
+        //set clauses
+        query->set_clauses.clear();
+        for (auto &expr : x->set_clauses) {
+            SetClause set_clause;
+            set_clause.lhs.col_name = expr->col_name;
+            // set_clause.lhs.tab_name = query->tables;
+            set_clause.rhs = convert_sv_value(expr->val);
+            query->set_clauses.push_back(set_clause);
+        }
 
     } else if (auto x = std::dynamic_pointer_cast<ast::DeleteStmt>(parse)) {
         //处理where条件
         get_clause(x->conds, query->conds);
-        check_clause({x->tab_name}, query->conds);        
+        check_clause({x->tab_name}, query->conds);
     } else if (auto x = std::dynamic_pointer_cast<ast::InsertStmt>(parse)) {
         // 处理insert 的values值
         for (auto &sv_val : x->vals) {
@@ -66,7 +78,6 @@ std::shared_ptr<Query> Analyze::do_analyze(std::shared_ptr<ast::TreeNode> parse)
     query->parse = std::move(parse);
     return query;
 }
-
 
 TabCol Analyze::check_column(const std::vector<ColMeta> &all_cols, TabCol target) {
     if (target.tab_name.empty()) {
@@ -86,7 +97,6 @@ TabCol Analyze::check_column(const std::vector<ColMeta> &all_cols, TabCol target
         target.tab_name = tab_name;
     } else {
         /** TODO: Make sure target column exists */
-        
     }
     return target;
 }
@@ -98,7 +108,13 @@ void Analyze::get_all_cols(const std::vector<std::string> &tab_names, std::vecto
         all_cols.insert(all_cols.end(), sel_tab_cols.begin(), sel_tab_cols.end());
     }
 }
-
+/**
+ * @brief: 把sv cond 传给 query的conds
+ * @note:
+ * @param: sv_conds 入参
+ * @param: conds 出参
+ * @return:
+ */
 void Analyze::get_clause(const std::vector<std::shared_ptr<ast::BinaryExpr>> &sv_conds, std::vector<Condition> &conds) {
     conds.clear();
     for (auto &expr : sv_conds) {
@@ -144,7 +160,6 @@ void Analyze::check_clause(const std::vector<std::string> &tab_names, std::vecto
         }
     }
 }
-
 
 Value Analyze::convert_sv_value(const std::shared_ptr<ast::Value> &sv_val) {
     Value val;

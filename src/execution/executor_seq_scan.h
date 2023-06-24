@@ -45,7 +45,7 @@ class SeqScanExecutor : public AbstractExecutor {
         context_ = context;
 
         fed_conds_ = conds_;
-        LOG_DEBUG("seqscan cons");
+        LOG_DEBUG("SeqScan Construction");
     }
 
     std::string getType() override { return "SeqScan"; }
@@ -55,7 +55,7 @@ class SeqScanExecutor : public AbstractExecutor {
      *
      */
     void beginTuple() override {
-        LOG_DEBUG("seqscan begin tuple");
+        // LOG_DEBUG("seqscan begin tuple");
 
         check_runtime_conds();
 

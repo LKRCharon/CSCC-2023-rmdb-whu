@@ -1,24 +1,11 @@
-failure
 | Tables |
-| t1 |
-| id | name |
 | Tables |
 | grade |
-| t1 |
-| name | id | score |
-| name | id | score |
-| name | id | score |
 | Tables |
 | grade |
-| t1 |
-| name | id | score |
-| Tables |
-| grade |
-| t1 |
 | name | id | score |
 | name | id | score |
 | Data | 1 | 90.500000 |
 | Data | 2 | 95.000000 |
 | Calc | 2 | 92.000000 |
 | Calc | 1 | 88.500000 |
-failure
