@@ -27,17 +27,6 @@ class UpdateExecutor : public AbstractExecutor {
     SmManager *sm_manager_;
 
    public:
-    // UpdateExecutor(SmManager *sm_manager, const std::string &tab_name, std::vector<SetClause> set_clauses,
-    //                std::vector<Condition> conds, std::vector<Rid> rids, Context *context) {
-    //     sm_manager_ = sm_manager;
-    //     tab_name_ = tab_name;
-    //     set_clauses_ = set_clauses;
-    //     tab_ = sm_manager_->db_.get_table(tab_name);
-    //     fh_ = sm_manager_->fhs_.at(tab_name).get();
-    //     conds_ = conds;
-    //     rids_ = rids;
-    //     context_ = context;
-    // }
     UpdateExecutor(SmManager *sm_manager, const std::string &tab_name, std::vector<SetClause> set_clauses,
                    std::vector<Condition> conds, std::vector<Rid> rids, Context *context) {
         sm_manager_ = sm_manager;

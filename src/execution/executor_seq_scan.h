@@ -33,6 +33,8 @@ class SeqScanExecutor : public AbstractExecutor {
     SmManager *sm_manager_;
 
    public:
+    std::string GetTableName() { return tab_name_; }
+
     SeqScanExecutor(SmManager *sm_manager, std::string tab_name, std::vector<Condition> conds, Context *context) {
         sm_manager_ = sm_manager;
         tab_name_ = std::move(tab_name);
@@ -43,7 +45,18 @@ class SeqScanExecutor : public AbstractExecutor {
         len_ = cols_.back().offset + cols_.back().len;
 
         context_ = context;
-
+        std::map<CompOp, CompOp> swap_op = {
+            {OP_EQ, OP_EQ}, {OP_NE, OP_NE}, {OP_LT, OP_GT}, {OP_GT, OP_LT}, {OP_LE, OP_GE}, {OP_GE, OP_LE},
+        };
+        for (auto &cond : conds_) {
+            if (cond.lhs_col.tab_name != tab_name_) {
+                // lhs is on other table, now rhs must be on this table
+                assert(!cond.is_rhs_val && cond.rhs_col.tab_name == tab_name_);
+                // swap lhs and rhs
+                std::swap(cond.lhs_col, cond.rhs_col);
+                cond.op = swap_op.at(cond.op);
+            }
+        }
         fed_conds_ = conds_;
         LOG_DEBUG("SeqScan Construction");
     }
@@ -115,15 +128,19 @@ class SeqScanExecutor : public AbstractExecutor {
         // lab3 task2 todo end
     }
 
-    // 不需要重写
-    void feed(const std::map<TabCol, Value> &feed_dict) {
-        fed_conds_ = conds_;
+    void feed(const std::map<TabCol, Value> &feed_dict, const std::vector<Condition> &fed_conds) override {
+        fed_conds_ = fed_conds;
+        std::map<CompOp, CompOp> swap_op = {
+            {OP_EQ, OP_EQ}, {OP_NE, OP_NE}, {OP_LT, OP_GT}, {OP_GT, OP_LT}, {OP_LE, OP_GE}, {OP_GE, OP_LE},
+        };
         for (auto &cond : fed_conds_) {
-            // eg. where B.id=A.id , this table is B
-            // cond.rhs is not a val but a column
-            // and the rhs column's tab name is not this tab
-            // need to feed rhs col
-            // set the A.id to a val,  the val is  current Table_A Tuple's map.getValue('id');
+            if (cond.lhs_col.tab_name != tab_name_) {
+                // lhs is on other table, now rhs must be on this table
+                assert(!cond.is_rhs_val && cond.rhs_col.tab_name == tab_name_);
+                // swap lhs and rhs
+                std::swap(cond.lhs_col, cond.rhs_col);
+                cond.op = swap_op.at(cond.op);
+            }
             if (!cond.is_rhs_val && cond.rhs_col.tab_name != tab_name_) {
                 cond.is_rhs_val = true;
                 cond.rhs_val = feed_dict.at(cond.rhs_col);
