@@ -104,7 +104,6 @@ single_op ";"|"("|")"|","|"*"|"="|">"|"<"|"."
     errno = 0;
     yylval->sv_int = strtoll(yytext,&end_ptr,10);
     if(errno == ERANGE){
-        std::cerr<<"Big Int range error"<<std::endl;
         throw BigIntRangeError(yytext);
     }
     return VALUE_INT;

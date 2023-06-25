@@ -111,10 +111,10 @@ class DMLPlan : public Plan {
         // fixme: develop info
         if (subplan_ != nullptr) {
             std::string plan_tag_info = plantag2str(tag) + " subplan: " + plantag2str(subplan_->tag);
-            LOG_DEBUG(plan_tag_info.c_str());
+            // LOG_DEBUG(plan_tag_info.c_str());
         } else {
             std::string plan_tag_info = plantag2str(tag) + " NO subplan";
-            LOG_DEBUG(plan_tag_info.c_str());
+            // LOG_DEBUG(plan_tag_info.c_str());
         }
     }
     ~DMLPlan() {}
