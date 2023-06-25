@@ -18,7 +18,6 @@ See the Mulan PSL v2 for more details. */
 #include "defs.h"
 #include "record/rm_defs.h"
 
-
 struct TabCol {
     std::string tab_name;
     std::string col_name;
@@ -31,7 +30,8 @@ struct TabCol {
 struct Value {
     ColType type;  // type of value
     union {
-        int int_val;      // int value
+        int int_val;  // int value
+        long long bigint_val;
         double float_val;  // float value
     };
     std::string str_val;  // string value
@@ -41,6 +41,10 @@ struct Value {
     void set_int(int int_val_) {
         type = TYPE_INT;
         int_val = int_val_;
+    }
+    void set_int(long long bigint_val_) {
+        type = TYPE_BIGINT;
+        bigint_val = bigint_val_;
     }
 
     void set_float(double float_val_) {
@@ -59,6 +63,9 @@ struct Value {
         if (type == TYPE_INT) {
             assert(len == sizeof(int));
             *(int *)(raw->data) = int_val;
+        } else if (type == TYPE_BIGINT) {
+            assert(len == sizeof(long long));
+            *(long long *)(raw->data) = bigint_val;
         } else if (type == TYPE_FLOAT) {
             assert(len == sizeof(double));
             *(double *)(raw->data) = float_val;

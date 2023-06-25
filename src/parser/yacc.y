@@ -22,7 +22,7 @@ using namespace ast;
 
 // keywords
 %token SHOW TABLES CREATE TABLE DROP DESC INSERT INTO VALUES DELETE FROM ASC ORDER BY
-WHERE UPDATE SET SELECT INT CHAR FLOAT INDEX AND JOIN EXIT HELP TXN_BEGIN TXN_COMMIT TXN_ABORT TXN_ROLLBACK ORDER_BY
+WHERE UPDATE SET SELECT INT BIGINT CHAR FLOAT INDEX AND JOIN EXIT HELP TXN_BEGIN TXN_COMMIT TXN_ABORT TXN_ROLLBACK ORDER_BY
 // non-keywords
 %token LEQ NEQ GEQ T_EOF
 
@@ -183,6 +183,10 @@ type:
         INT
     {
         $$ = std::make_shared<TypeLen>(SV_TYPE_INT, sizeof(int));
+    }
+    |   BIGINT
+    {
+        $$ = std::make_shared<TypeLen>(SV_TYPE_BIGINT, sizeof(long long));
     }
     |   CHAR '(' VALUE_INT ')'
     {

@@ -75,6 +75,7 @@ single_op ";"|"("|")"|","|"*"|"="|">"|"<"|"."
 "SET" { return SET; }
 "SELECT" { return SELECT; }
 "INT" { return INT; }
+"BIGINT" { return BIGINT; }
 "CHAR" { return CHAR; }
 "FLOAT" { return FLOAT; }
 "INDEX" { return INDEX; }
@@ -97,7 +98,8 @@ single_op ";"|"("|")"|","|"*"|"="|">"|"<"|"."
 }
     /* literals */
 {value_int} {
-    yylval->sv_int = atoi(yytext);
+    // yylval->sv_int = atoi(yytext);
+    yylval->sv_int = atoll(yytext);
     return VALUE_INT;
 }
 {value_float} {

@@ -16,7 +16,7 @@ See the Mulan PSL v2 for more details. */
 enum JoinType { INNER_JOIN, LEFT_JOIN, RIGHT_JOIN, FULL_JOIN };
 namespace ast {
 
-enum SvType { SV_TYPE_INT, SV_TYPE_FLOAT, SV_TYPE_STRING };
+enum SvType { SV_TYPE_INT, SV_TYPE_BIGINT, SV_TYPE_FLOAT, SV_TYPE_STRING };
 
 enum SvCompOp { SV_OP_EQ, SV_OP_NE, SV_OP_LT, SV_OP_GT, SV_OP_LE, SV_OP_GE };
 
@@ -96,10 +96,15 @@ struct Expr : public TreeNode {};
 
 struct Value : public Expr {};
 
-struct IntLit : public Value {
-    int val;
+// struct IntLit : public Value {
+//     int val;
 
-    IntLit(int val_) : val(val_) {}
+//     IntLit(int val_) : val(val_) {}
+// };
+struct IntLit : public Value {
+    long long val;
+
+    IntLit(long long val_) : val(val_) {}
 };
 
 struct FloatLit : public Value {
@@ -200,7 +205,9 @@ struct SelectStmt : public TreeNode {
 
 // Semantic value
 struct SemValue {
-    int sv_int;
+    // int 直接存成ll
+    long long sv_int;
+    // long long sv_bigint;
     double sv_float;
     std::string sv_str;
     OrderByDir sv_orderby_dir;

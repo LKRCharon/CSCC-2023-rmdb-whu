@@ -67,6 +67,8 @@ class AbstractExecutor {
             char *val_buf = rec->data + col.offset;
             if (col.type == TYPE_INT) {
                 val.set_int(*(int *)val_buf);
+            } else if (col.type == TYPE_BIGINT) {
+                val.set_float(*(long long *)val_buf);
             } else if (col.type == TYPE_FLOAT) {
                 val.set_float(*(float *)val_buf);
             } else if (col.type == TYPE_STRING) {

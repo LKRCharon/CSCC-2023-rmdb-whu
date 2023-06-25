@@ -44,8 +44,12 @@ class InsertExecutor : public AbstractExecutor {
         for (size_t i = 0; i < values_.size(); i++) {
             auto &col = tab_.cols[i];
             auto &val = values_[i];
+            // 正则识别无法区分int和bigint，在这里特判
             if (col.type != val.type) {
-                throw IncompatibleTypeError(coltype2str(col.type), coltype2str(val.type));
+                if (col.type != TYPE_INT) {
+                    throw IncompatibleTypeError(coltype2str(col.type), coltype2str(val.type));
+                }
+                val.type = TYPE_INT;
             }
             val.init_raw(col.len);
             memcpy(rec.data + col.offset, val.raw->data, col.len);

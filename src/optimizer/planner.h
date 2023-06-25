@@ -16,15 +16,15 @@ See the Mulan PSL v2 for more details. */
 #include <string>
 #include <vector>
 
+#include "analyze/analyze.h"
+#include "common/common.h"
+#include "common/context.h"
 #include "execution/execution_defs.h"
 #include "execution/execution_manager.h"
+#include "parser/parser.h"
+#include "plan.h"
 #include "record/rm.h"
 #include "system/sm.h"
-#include "common/context.h"
-#include "plan.h"
-#include "parser/parser.h"
-#include "common/common.h"
-#include "analyze/analyze.h"
 
 class Planner {
    private:
@@ -32,7 +32,6 @@ class Planner {
 
    public:
     Planner(SmManager *sm_manager) : sm_manager_(sm_manager) {}
-
 
     std::shared_ptr<Plan> do_planner(std::shared_ptr<Query> query, Context *context);
 
@@ -43,16 +42,18 @@ class Planner {
     std::shared_ptr<Plan> make_one_rel(std::shared_ptr<Query> query);
 
     std::shared_ptr<Plan> generate_sort_plan(std::shared_ptr<Query> query, std::shared_ptr<Plan> plan);
-    
+
     std::shared_ptr<Plan> generate_select_plan(std::shared_ptr<Query> query, Context *context);
 
-
     // int get_indexNo(std::string tab_name, std::vector<Condition> curr_conds);
-    bool get_index_cols(std::string tab_name, std::vector<Condition> curr_conds, std::vector<std::string>& index_col_names);
+    bool get_index_cols(std::string tab_name, std::vector<Condition> curr_conds,
+                        std::vector<std::string> &index_col_names);
 
     ColType interp_sv_type(ast::SvType sv_type) {
-        std::map<ast::SvType, ColType> m = {
-            {ast::SV_TYPE_INT, TYPE_INT}, {ast::SV_TYPE_FLOAT, TYPE_FLOAT}, {ast::SV_TYPE_STRING, TYPE_STRING}};
+        std::map<ast::SvType, ColType> m = {{ast::SV_TYPE_INT, TYPE_INT},
+                                            {ast::SV_TYPE_BIGINT, TYPE_BIGINT},
+                                            {ast::SV_TYPE_FLOAT, TYPE_FLOAT},
+                                            {ast::SV_TYPE_STRING, TYPE_STRING}};
         return m.at(sv_type);
     }
 };
