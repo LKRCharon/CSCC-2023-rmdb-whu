@@ -62,7 +62,7 @@ class UpdateExecutor : public AbstractExecutor {
                 auto lhs_col = tab_.get_col(set_clause.lhs.col_name);
                 auto val = set_clause.rhs;
                 // bigint
-                if(lhs_col->type == TYPE_INT){
+                if (lhs_col->type == TYPE_INT) {
                     val.type = TYPE_INT;
                 }
                 val.init_raw(lhs_col->len);
