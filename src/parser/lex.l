@@ -14,7 +14,8 @@
 #include "ast.h"
 #include "yacc.tab.h"
 #include <iostream>
-
+#include <cerrno>
+#include "errors.h"
 // automatically update location
 #define YY_USER_ACTION \
     yylloc->first_line = yylloc->last_line; \
@@ -99,7 +100,13 @@ single_op ";"|"("|")"|","|"*"|"="|">"|"<"|"."
     /* literals */
 {value_int} {
     // yylval->sv_int = atoi(yytext);
-    yylval->sv_int = atoll(yytext);
+    char* end_ptr;
+    errno = 0;
+    yylval->sv_int = strtoll(yytext,&end_ptr,10);
+    if(errno == ERANGE){
+        std::cerr<<"Big Int range error"<<std::endl;
+        throw BigIntRangeError(yytext);
+    }
     return VALUE_INT;
 }
 {value_float} {

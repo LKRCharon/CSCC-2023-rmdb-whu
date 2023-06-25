@@ -133,6 +133,11 @@ class IndexExistsError : public RMDBError {
 };
 
 // QL errors
+class BigIntRangeError : public RMDBError {
+   public:
+    BigIntRangeError(const std::string &yytext) : RMDBError("BIGINT range out limit" + yytext) {}
+    BigIntRangeError() : RMDBError("BIGINT range out limit") {}
+};
 class InvalidValueCountError : public RMDBError {
    public:
     InvalidValueCountError() : RMDBError("Invalid value count") {}

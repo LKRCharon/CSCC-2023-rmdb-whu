@@ -41,7 +41,7 @@ class UpdateExecutor : public AbstractExecutor {
     // https://github.com/ruc-deke/rucbase-lab/blob/main/src/execution/executor_update.h
     std::unique_ptr<RmRecord> Next() override {
         // Get all necessary index files
-        std::vector<IxIndexHandle *> ihs(tab_.cols.size(), nullptr);
+        // std::vector<IxIndexHandle *> ihs(tab_.cols.size(), nullptr);
         // for (auto &set_clause : set_clauses_) {
         //     auto lhs_col = tab_.get_col(set_clause.lhs.col_name);
         //     if (lhs_col->index) {
@@ -61,6 +61,10 @@ class UpdateExecutor : public AbstractExecutor {
             for (auto &set_clause : set_clauses_) {
                 auto lhs_col = tab_.get_col(set_clause.lhs.col_name);
                 auto val = set_clause.rhs;
+                // bigint
+                if(lhs_col->type == TYPE_INT){
+                    val.type = TYPE_INT;
+                }
                 val.init_raw(lhs_col->len);
                 memcpy(rec->data + lhs_col->offset, val.raw->data, lhs_col->len);
             }
