@@ -1160,7 +1160,6 @@ YY_RULE_SETUP
     errno = 0;
     yylval->sv_int = strtoll(yytext,&end_ptr,10);
     if(errno == ERANGE){
-        std::cerr<<"Big Int range error"<<std::endl;
         throw BigIntRangeError(yytext);
     }
     return VALUE_INT;
@@ -1168,7 +1167,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 113 "lex.l"
+#line 112 "lex.l"
 {
     yylval->sv_float = atof(yytext);
     return VALUE_FLOAT;
@@ -1177,7 +1176,7 @@ YY_RULE_SETUP
 case 46:
 /* rule 46 can match eol */
 YY_RULE_SETUP
-#line 117 "lex.l"
+#line 116 "lex.l"
 {
     yylval->sv_str = std::string(yytext + 1, strlen(yytext) - 2);
     return VALUE_STRING;
@@ -1186,21 +1185,21 @@ YY_RULE_SETUP
 /* EOF */
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(STATE_COMMENT):
-#line 122 "lex.l"
+#line 121 "lex.l"
 { return T_EOF; }
 	YY_BREAK
 /* unexpected char */
 case 47:
 YY_RULE_SETUP
-#line 124 "lex.l"
+#line 123 "lex.l"
 { std::cerr << "Lexer Error: unexpected character " << yytext[0] << std::endl; }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 125 "lex.l"
+#line 124 "lex.l"
 ECHO;
 	YY_BREAK
-#line 1204 "lex.yy.cpp"
+#line 1203 "lex.yy.cpp"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2166,6 +2165,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 125 "lex.l"
+#line 124 "lex.l"
 
 
