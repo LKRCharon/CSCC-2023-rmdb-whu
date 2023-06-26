@@ -138,6 +138,13 @@ class BigIntRangeError : public RMDBError {
     BigIntRangeError(const std::string &yytext) : RMDBError("BIGINT range out limit" + yytext) {}
     BigIntRangeError() : RMDBError("BIGINT range out limit") {}
 };
+
+class DatetimeFormatError : public RMDBError {
+   public:
+    DatetimeFormatError(const std::string &str) : RMDBError("Datetime format Error (string) :" + str +"\n") {}
+    DatetimeFormatError(const long long &ll) : RMDBError("Datetime format Error (longlong) :" + std::to_string(ll)+"\n") {}
+};
+
 class InvalidValueCountError : public RMDBError {
    public:
     InvalidValueCountError() : RMDBError("Invalid value count") {}

@@ -62,8 +62,10 @@ class UpdateExecutor : public AbstractExecutor {
                 auto lhs_col = tab_.get_col(set_clause.lhs.col_name);
                 auto val = set_clause.rhs;
                 // bigint
-                if (lhs_col->type == TYPE_INT) {
+                if (lhs_col->type == TYPE_INT && val.type == TYPE_BIGINT) {
                     val.type = TYPE_INT;
+                } else if (lhs_col->type == TYPE_DATETIME && val.type == TYPE_STRING) {
+                    val.set_datetime(DatetimeStrToLL(val.str_val));
                 }
                 val.init_raw(lhs_col->len);
                 memcpy(rec->data + lhs_col->offset, val.raw->data, lhs_col->len);

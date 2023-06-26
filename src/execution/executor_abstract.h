@@ -11,10 +11,10 @@ See the Mulan PSL v2 for more details. */
 #pragma once
 
 #include "common/common.h"
+#include "errors.h"
 #include "execution_defs.h"
 #include "index/ix.h"
 #include "system/sm.h"
-
 class AbstractExecutor {
    public:
     Rid _abstract_rid;
@@ -68,7 +68,9 @@ class AbstractExecutor {
             if (col.type == TYPE_INT) {
                 val.set_int(*(int *)val_buf);
             } else if (col.type == TYPE_BIGINT) {
-                val.set_float(*(long long *)val_buf);
+                val.set_int(*(long long *)val_buf);
+            } else if (col.type == TYPE_DATETIME) {
+                val.set_datetime(*(long long *)val_buf);
             } else if (col.type == TYPE_FLOAT) {
                 val.set_float(*(float *)val_buf);
             } else if (col.type == TYPE_STRING) {

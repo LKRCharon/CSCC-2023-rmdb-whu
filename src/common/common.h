@@ -33,6 +33,11 @@ struct Value {
         int int_val;  // int value
         long long bigint_val;
         double float_val;  // float value
+        // https://stackoverflow.com/questions/22930785/why-mysql-datetime-takes-8-bytes-instead-of-6-bytes
+        // 8字节存储：
+        // 4 bytes: integer for date represented as YYYY×10000 + MM×100 + DD
+        // 4 bytes: integer for time represented as HH×10000 + MM×100 + SS
+        long long datetime_val;
     };
     std::string str_val;  // string value
 
@@ -46,7 +51,11 @@ struct Value {
         type = TYPE_BIGINT;
         bigint_val = bigint_val_;
     }
-
+    void set_datetime(long long datetime_val_) {
+        type = TYPE_DATETIME;
+        datetime_val = datetime_val_;
+        str_val.clear();
+    }
     void set_float(double float_val_) {
         type = TYPE_FLOAT;
         float_val = float_val_;
@@ -66,6 +75,9 @@ struct Value {
         } else if (type == TYPE_BIGINT) {
             assert(len == sizeof(long long));
             *(long long *)(raw->data) = bigint_val;
+        } else if (type == TYPE_DATETIME) {
+            assert(len == sizeof(long long));
+            *(long long *)(raw->data) = datetime_val;
         } else if (type == TYPE_FLOAT) {
             assert(len == sizeof(double));
             *(double *)(raw->data) = float_val;
@@ -93,3 +105,6 @@ struct SetClause {
     TabCol lhs;
     Value rhs;
 };
+
+long long DatetimeStrToLL(const std::string &str);
+std::string DatetimeLLtoStr(long long ll);

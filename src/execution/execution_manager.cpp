@@ -153,6 +153,8 @@ void QlManager::select_from(std::unique_ptr<AbstractExecutor> executorTreeRoot, 
                 col_str = std::to_string(*(int *)rec_buf);
             } else if (col.type == TYPE_BIGINT) {
                 col_str = std::to_string(*(long long *)rec_buf);
+            } else if (col.type == TYPE_DATETIME) {
+                col_str = DatetimeLLtoStr(*(long long *)rec_buf);
             } else if (col.type == TYPE_FLOAT) {
                 col_str = std::to_string(*(double *)rec_buf);
             } else if (col.type == TYPE_STRING) {

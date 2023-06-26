@@ -29,6 +29,11 @@ inline int ix_compare(const char *a, const char *b, ColType type, int col_len) {
             long long ib = *(long long *)b;
             return (ia < ib) ? -1 : ((ia > ib) ? 1 : 0);
         }
+        case TYPE_DATETIME: {
+            long long ia = *(long long *)a;
+            long long ib = *(long long *)b;
+            return (ia < ib) ? -1 : ((ia > ib) ? 1 : 0);
+        }
         case TYPE_FLOAT: {
             double fa = *(double *)a;
             double fb = *(double *)b;

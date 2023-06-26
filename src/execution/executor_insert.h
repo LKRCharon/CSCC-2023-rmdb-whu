@@ -11,6 +11,7 @@ See the Mulan PSL v2 for more details. */
 #pragma once
 #include <string>
 #include "common/logger.h"
+#include "common/common.h"
 #include "execution_defs.h"
 #include "execution_manager.h"
 #include "executor_abstract.h"
@@ -44,12 +45,17 @@ class InsertExecutor : public AbstractExecutor {
         for (size_t i = 0; i < values_.size(); i++) {
             auto &col = tab_.cols[i];
             auto &val = values_[i];
-            // 正则识别无法区分int和bigint，在这里特判
             if (col.type != val.type) {
-                if (col.type != TYPE_INT) {
+                // 整数都是正则读的，默认为bigint类型
+                if (col.type == TYPE_INT && val.type == TYPE_BIGINT) {
+                    val.type = TYPE_INT;
+                } else if (col.type == TYPE_DATETIME && val.type == TYPE_STRING) {
+                    // 同理 datetime也都是以str的形式正则读进来的
+                    // val.type = TYPE_DATETIME;
+                    val.set_datetime(DatetimeStrToLL(val.str_val));
+                } else {
                     throw IncompatibleTypeError(coltype2str(col.type), coltype2str(val.type));
                 }
-                val.type = TYPE_INT;
             }
             val.init_raw(col.len);
             memcpy(rec.data + col.offset, val.raw->data, col.len);

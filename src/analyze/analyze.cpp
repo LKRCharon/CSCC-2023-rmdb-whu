@@ -53,7 +53,7 @@ std::shared_ptr<Query> Analyze::do_analyze(std::shared_ptr<ast::TreeNode> parse)
         get_clause(x->conds, query->conds);
         check_clause({x->tab_name}, query->conds);
 
-        //set clauses
+        // set clauses
         query->set_clauses.clear();
         for (auto &expr : x->set_clauses) {
             SetClause set_clause;
@@ -148,9 +148,11 @@ void Analyze::check_clause(const std::vector<std::string> &tab_names, std::vecto
         ColType lhs_type = lhs_col->type;
         ColType rhs_type;
         if (cond.is_rhs_val) {
-            // 记得判断bigint转int
-            if(lhs_type == TYPE_INT){
+            // 判断bigint转int
+            if (lhs_type == TYPE_INT && cond.rhs_val.type == TYPE_BIGINT) {
                 cond.rhs_val.type = TYPE_INT;
+            } else if (lhs_type == TYPE_DATETIME && cond.rhs_val.type == TYPE_STRING) {
+                cond.rhs_val.set_datetime(DatetimeStrToLL(cond.rhs_val.str_val));
             }
             cond.rhs_val.init_raw(lhs_col->len);
             rhs_type = cond.rhs_val.type;

@@ -16,7 +16,7 @@ See the Mulan PSL v2 for more details. */
 enum JoinType { INNER_JOIN, LEFT_JOIN, RIGHT_JOIN, FULL_JOIN };
 namespace ast {
 
-enum SvType { SV_TYPE_INT, SV_TYPE_BIGINT, SV_TYPE_FLOAT, SV_TYPE_STRING };
+enum SvType { SV_TYPE_INT, SV_TYPE_BIGINT, SV_TYPE_FLOAT, SV_TYPE_STRING, SV_TYPE_DATETIME };
 
 enum SvCompOp { SV_OP_EQ, SV_OP_NE, SV_OP_LT, SV_OP_GT, SV_OP_LE, SV_OP_GE };
 
@@ -209,6 +209,7 @@ struct SemValue {
     long long sv_int;
     // long long sv_bigint;
     double sv_float;
+    // datetime 也一样 先用str存
     std::string sv_str;
     OrderByDir sv_orderby_dir;
     std::vector<std::string> sv_strs;
