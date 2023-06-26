@@ -141,8 +141,8 @@ class BigIntRangeError : public RMDBError {
 
 class DatetimeFormatError : public RMDBError {
    public:
-    DatetimeFormatError(const std::string &str) : RMDBError("Datetime format Error (string) :" + str +"\n") {}
-    DatetimeFormatError(const long long &ll) : RMDBError("Datetime format Error (longlong) :" + std::to_string(ll)+"\n") {}
+    DatetimeFormatError(const std::string &str) : RMDBError("Datetime format Error (string) :" + str) {}
+    DatetimeFormatError(const long long &ll) : RMDBError("Datetime format Error (longlong) :" + std::to_string(ll)) {}
 };
 
 class InvalidValueCountError : public RMDBError {

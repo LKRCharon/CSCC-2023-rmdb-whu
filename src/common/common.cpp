@@ -17,16 +17,17 @@ long long DatetimeStrToLL(const std::string &str) {
     }
     long long time = 0;
     const char *delimiter = "-: ";
-
+    std::string temp;
+    temp.assign(str);
     // 下面是判断数据范围所用
     long long downsides[10] = {1000, 1, 1, 0, 0, 0};
     long long upsides[10] = {9999, 12, 31, 23, 59, 59};
     int index = 0;
-    // 2月特判
+    // 对2月特判
     bool isFeb = false;
     ;
     // 开始转换
-    char *token = std::strtok(const_cast<char *>(str.c_str()), delimiter);
+    char *token = std::strtok(const_cast<char *>(temp.c_str()), delimiter);
     while (token != nullptr) {
         long long value = std::strtoll(token, nullptr, 10);
         time += value;
