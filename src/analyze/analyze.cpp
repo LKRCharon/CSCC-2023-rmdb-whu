@@ -148,6 +148,10 @@ void Analyze::check_clause(const std::vector<std::string> &tab_names, std::vecto
         ColType lhs_type = lhs_col->type;
         ColType rhs_type;
         if (cond.is_rhs_val) {
+            // 记得判断bigint转int
+            if(lhs_type == TYPE_INT){
+                cond.rhs_val.type = TYPE_INT;
+            }
             cond.rhs_val.init_raw(lhs_col->len);
             rhs_type = cond.rhs_val.type;
         } else {
