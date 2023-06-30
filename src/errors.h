@@ -130,6 +130,11 @@ class IndexExistsError : public RMDBError {
         }
         _msg += ")";
     }
+    IndexExistsError(const std::string &tab_name, const std::string &col_name) {
+        _msg += "Index already exists: " + tab_name + ".(";
+        _msg += col_name;
+        _msg += ")";
+    }
 };
 
 // QL errors

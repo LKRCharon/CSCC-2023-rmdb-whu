@@ -104,12 +104,6 @@ void SmManager::open_db(const std::string& db_name) {
         fhs_.emplace(tab.name, rm_manager_->open_file(tab.name));
         for (size_t i = 0; i < tab.cols.size(); i++) {
             auto& col = tab.cols[i];
-            // if (col.index) {
-            //     auto index_name = ix_manager_->get_index_name(tab.name, i);
-            //     assert(ihs_.count(index_name) == 0);
-            //     // ihs_[index_name] = ix_manager_->open_index(tab.name, i);
-            //     ihs_.emplace(index_name, ix_manager_->open_index(tab.name, i));
-            // }
         }
     }
 }
@@ -254,7 +248,17 @@ void SmManager::drop_table(const std::string& tab_name, Context* context) {
  * @param {Context*} context
  */
 void SmManager::create_index(const std::string& tab_name, const std::vector<std::string>& col_names, Context* context) {
-
+    TabMeta& tab_meta = db_.get_table(tab_name);
+    if (tab_meta.is_index(col_names)) {
+        throw IndexExistsError(tab_name, col_names);
+    }
+    // void create_index(const std::string &filename, const std::vector<ColMeta> &index_cols)
+    std::vector<ColMeta> index_cols;
+    for (const auto& col_name : col_names) {
+        auto col = tab_meta.get_col(col_name);
+        index_cols.push_back(*col);
+    }
+    ix_manager_->create_index(tab_name, index_cols);
 }
 
 /**
@@ -272,3 +276,23 @@ void SmManager::drop_index(const std::string& tab_name, const std::vector<std::s
  * @param {Context*} context
  */
 void SmManager::drop_index(const std::string& tab_name, const std::vector<ColMeta>& cols, Context* context) {}
+
+/**
+ * @description: 显示索引
+ * @param {string&} tab_name 表名称
+ * @param {Context*} context
+ */
+void SmManager::show_index(const std::string& tab_name, Context* context) {
+    TabMeta& tab_meta = db_.get_table(tab_name);
+    std::fstream outfile;
+    outfile.open("output.txt", std::ios::out | std::ios::app);
+    RecordPrinter printer(3);
+    printer.print_separator(context);
+    for (auto& entry : tab_meta.indexes) {
+        std::string all_columns = entry.GetAllColumnsString();
+        std::vector<std::string> index_info = {entry.tab_name, "unique", all_columns};
+        printer.print_record(index_info, context);
+    }
+    printer.print_separator(context);
+    outfile.close();
+}

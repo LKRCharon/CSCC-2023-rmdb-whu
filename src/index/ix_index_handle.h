@@ -45,7 +45,14 @@ inline int ix_compare(const char *a, const char *b, ColType type, int col_len) {
             throw InternalError("Unexpected data type");
     }
 }
-
+/**
+ * @brief 比较node里的key和传入的key，考虑了多列索引的情况
+ * @param a 节点里的key
+ * @param b 目标key
+ * @param col_types 每一列的类型
+ * @param col_lens 每一列的长度
+ * @return 小于，等于，大于： -1,0,1
+ */
 inline int ix_compare(const char *a, const char *b, const std::vector<ColType> &col_types,
                       const std::vector<int> &col_lens) {
     int offset = 0;

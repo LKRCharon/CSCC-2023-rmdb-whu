@@ -12,5 +12,4 @@ See the Mulan PSL v2 for more details. */
 namespace ast {
 
 std::shared_ptr<TreeNode> parse_tree;
-
 }

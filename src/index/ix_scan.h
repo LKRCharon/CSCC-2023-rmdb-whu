@@ -13,7 +13,6 @@ See the Mulan PSL v2 for more details. */
 #include "ix_defs.h"
 #include "ix_index_handle.h"
 
-// class IxIndexHandle;
 
 // 用于遍历叶子结点
 // 用于直接遍历叶子结点，而不用findleafpage来得到叶子结点

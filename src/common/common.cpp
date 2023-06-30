@@ -9,10 +9,11 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details. */
 
 #include "common/common.h"
-
+#include <regex>
 long long DatetimeStrToLL(const std::string &str) {
-    // 长度不对
-    if (str.size() != 19) {
+    // 匹配下大致格式 防止带负或者长度不对
+    std::regex pattern(R"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})");
+    if (str.size() != 19 || (!std::regex_match(str, pattern))) {
         throw DatetimeFormatError(str);
     }
     long long time = 0;

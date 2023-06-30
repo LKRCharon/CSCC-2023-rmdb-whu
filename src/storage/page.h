@@ -11,6 +11,8 @@ See the Mulan PSL v2 for more details. */
 #pragma once
 
 #include "common/config.h"
+#include "common/logger.h"
+#include "common/rwlatch.h"
 
 /**
  * @description: 存储层每个Page的id的声明
@@ -61,6 +63,30 @@ class Page {
     static constexpr size_t OFFSET_LSN = 0;
     static constexpr size_t OFFSET_PAGE_HDR = 4;
 
+    /** Acquire the page write latch. */
+    inline void WLatch() {
+        // LOG_DEBUG("Write Latch %d", id_.page_no);
+        rwlatch_.WLock();
+    }
+
+    /** Release the page write latch. */
+
+    inline void WUnlatch() {
+        // LOG_DEBUG("Write UnLatch %d", page_id_);
+        rwlatch_.WUnlock();
+    }
+
+    /** Acquire the page read latch. */
+    inline void RLatch() {
+        // LOG_DEBUG("Read Latch %d", page_id_);
+        rwlatch_.RLock();
+    }
+
+    /** Release the page read latch. */
+    inline void RUnlatch() {
+        // LOG_DEBUG("Read UNLatch %d", page_id_);
+        rwlatch_.RUnlock();
+    }
     inline lsn_t get_page_lsn() { return *reinterpret_cast<lsn_t *>(get_data() + OFFSET_LSN); }
 
     inline void set_page_lsn(lsn_t page_lsn) { memcpy(get_data() + OFFSET_LSN, &page_lsn, sizeof(lsn_t)); }
@@ -81,4 +107,6 @@ class Page {
 
     /** The pin count of this page. */
     int pin_count_ = 0;
+
+    ReaderWriterLatch rwlatch_;
 };

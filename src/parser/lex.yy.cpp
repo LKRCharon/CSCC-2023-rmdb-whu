@@ -1,6 +1,6 @@
-#line 2 "/home/charon/rmdb/src/parser/lex.yy.cpp"
+#line 2 "lex.yy.cpp"
 
-#line 4 "/home/charon/rmdb/src/parser/lex.yy.cpp"
+#line 4 "lex.yy.cpp"
 
 #define  YY_INT_ALIGNED short int
 
@@ -633,9 +633,9 @@ char *yytext;
         } \
     }
 
-#line 637 "/home/charon/rmdb/src/parser/lex.yy.cpp"
+#line 637 "lex.yy.cpp"
 
-#line 639 "/home/charon/rmdb/src/parser/lex.yy.cpp"
+#line 639 "lex.yy.cpp"
 
 #define INITIAL 0
 #define STATE_COMMENT 1
@@ -873,7 +873,7 @@ YY_DECL
 
 #line 49 "lex.l"
     /* block comment */
-#line 877 "/home/charon/rmdb/src/parser/lex.yy.cpp"
+#line 877 "lex.yy.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1209,7 +1209,7 @@ YY_RULE_SETUP
 #line 125 "lex.l"
 ECHO;
 	YY_BREAK
-#line 1213 "/home/charon/rmdb/src/parser/lex.yy.cpp"
+#line 1213 "lex.yy.cpp"
 
 	case YY_END_OF_BUFFER:
 		{

@@ -13,9 +13,9 @@ See the Mulan PSL v2 for more details. */
 #include <memory>
 #include <string>
 
-#include "system/sm_meta.h"
 #include "ix_defs.h"
 #include "ix_index_handle.h"
+#include "system/sm_meta.h"
 
 class IxManager {
    private:
@@ -26,35 +26,33 @@ class IxManager {
     IxManager(DiskManager *disk_manager, BufferPoolManager *buffer_pool_manager)
         : disk_manager_(disk_manager), bpm_(buffer_pool_manager) {}
 
-    std::string get_index_name(const std::string &filename, const std::vector<std::string>& index_cols) {
+    std::string get_index_name(const std::string &filename, const std::vector<std::string> &index_cols) {
         std::string index_name = filename;
-        for(size_t i = 0; i < index_cols.size(); ++i) 
-            index_name += "_" + index_cols[i];
+        for (size_t i = 0; i < index_cols.size(); ++i) index_name += "_" + index_cols[i];
         index_name += ".idx";
 
         return index_name;
     }
 
-    std::string get_index_name(const std::string &filename, const std::vector<ColMeta>& index_cols) {
+    std::string get_index_name(const std::string &filename, const std::vector<ColMeta> &index_cols) {
         std::string index_name = filename;
-        for(size_t i = 0; i < index_cols.size(); ++i) 
-            index_name += "_" + index_cols[i].name;
+        for (size_t i = 0; i < index_cols.size(); ++i) index_name += "_" + index_cols[i].name;
         index_name += ".idx";
 
         return index_name;
     }
 
-    bool exists(const std::string &filename, const std::vector<ColMeta>& index_cols) {
+    bool exists(const std::string &filename, const std::vector<ColMeta> &index_cols) {
         auto ix_name = get_index_name(filename, index_cols);
         return disk_manager_->is_file(ix_name);
     }
 
-    bool exists(const std::string &filename, const std::vector<std::string>& index_cols) {
+    bool exists(const std::string &filename, const std::vector<std::string> &index_cols) {
         auto ix_name = get_index_name(filename, index_cols);
         return disk_manager_->is_file(ix_name);
     }
 
-    void create_index(const std::string &filename, const std::vector<ColMeta>& index_cols) {
+    void create_index(const std::string &filename, const std::vector<ColMeta> &index_cols) {
         std::string ix_name = get_index_name(filename, index_cols);
         // Create index file
         disk_manager_->create_file(ix_name);
@@ -65,33 +63,33 @@ class IxManager {
         // Theoretically we have: |page_hdr| + (|attr| + |rid|) * n <= PAGE_SIZE
         // but we reserve one slot for convenient inserting and deleting, i.e.
         // |page_hdr| + (|attr| + |rid|) * (n + 1) <= PAGE_SIZE
-        int col_tot_len = 0;
+        int col_total_len = 0;
         int col_num = index_cols.size();
-        for(auto& col: index_cols) {
-            col_tot_len += col.len;
+        for (auto &col : index_cols) {
+            col_total_len += col.len;
         }
-        if (col_tot_len > IX_MAX_COL_LEN) {
-            throw InvalidColLengthError(col_tot_len);
+        if (col_total_len > IX_MAX_COL_LEN) {
+            throw InvalidColLengthError(col_total_len);
         }
         // 根据 |page_hdr| + (|attr| + |rid|) * (n + 1) <= PAGE_SIZE 求得n的最大值btree_order
         // 即 n <= btree_order，那么btree_order就是每个结点最多可插入的键值对数量（实际还多留了一个空位，但其不可插入）
-        int btree_order = static_cast<int>((PAGE_SIZE - sizeof(IxPageHdr)) / (col_tot_len + sizeof(Rid)) - 1);
+        int btree_order = static_cast<int>((PAGE_SIZE - sizeof(IxPageHdr)) / (col_total_len + sizeof(Rid)) - 1);
         assert(btree_order > 2);
 
         // Create file header and write to file
-        IxFileHdr* fhdr = new IxFileHdr(IX_NO_PAGE, IX_INIT_NUM_PAGES, IX_INIT_ROOT_PAGE,
-                                col_num, col_tot_len, btree_order, (btree_order + 1) * col_tot_len,
-                                IX_INIT_ROOT_PAGE, IX_INIT_ROOT_PAGE);
-        for(int i = 0; i < col_num; ++i) {
+        IxFileHdr *fhdr =
+            new IxFileHdr(IX_NO_PAGE, IX_INIT_NUM_PAGES, IX_INIT_ROOT_PAGE, col_num, col_total_len, btree_order,
+                          (btree_order + 1) * col_total_len, IX_INIT_ROOT_PAGE, IX_INIT_ROOT_PAGE);
+        for (int i = 0; i < col_num; ++i) {
             fhdr->col_types_.push_back(index_cols[i].type);
             fhdr->col_lens_.push_back(index_cols[i].len);
         }
-        fhdr->update_tot_len();
-        
-        char* data = new char[fhdr->tot_len_];
+        fhdr->update_total_len();
+
+        char *data = new char[fhdr->total_len_];
         fhdr->serialize(data);
 
-        disk_manager_->write_page(fd, IX_FILE_HDR_PAGE, data, fhdr->tot_len_);
+        disk_manager_->write_page(fd, IX_FILE_HDR_PAGE, data, fhdr->total_len_);
 
         char page_buf[PAGE_SIZE];  // 在内存中初始化page_buf中的内容，然后将其写入磁盘
         memset(page_buf, 0, PAGE_SIZE);
@@ -133,33 +131,33 @@ class IxManager {
         disk_manager_->close_file(fd);
     }
 
-    void destroy_index(const std::string &filename, const std::vector<ColMeta>& index_cols) {
+    void destroy_index(const std::string &filename, const std::vector<ColMeta> &index_cols) {
         std::string ix_name = get_index_name(filename, index_cols);
         disk_manager_->destroy_file(ix_name);
     }
 
-    void destroy_index(const std::string &filename, const std::vector<std::string>& index_cols) {
+    void destroy_index(const std::string &filename, const std::vector<std::string> &index_cols) {
         std::string ix_name = get_index_name(filename, index_cols);
         disk_manager_->destroy_file(ix_name);
     }
 
     // 注意这里打开文件，创建并返回了index file handle的指针
-    std::unique_ptr<IxIndexHandle> open_index(const std::string &filename, const std::vector<ColMeta>& index_cols) {
+    std::unique_ptr<IxIndexHandle> open_index(const std::string &filename, const std::vector<ColMeta> &index_cols) {
         std::string ix_name = get_index_name(filename, index_cols);
         int fd = disk_manager_->open_file(ix_name);
         return std::make_unique<IxIndexHandle>(disk_manager_, bpm_, fd);
     }
 
-    std::unique_ptr<IxIndexHandle> open_index(const std::string &filename, const std::vector<std::string>& index_cols) {
+    std::unique_ptr<IxIndexHandle> open_index(const std::string &filename, const std::vector<std::string> &index_cols) {
         std::string ix_name = get_index_name(filename, index_cols);
         int fd = disk_manager_->open_file(ix_name);
         return std::make_unique<IxIndexHandle>(disk_manager_, bpm_, fd);
     }
 
     void close_index(const IxIndexHandle *ih) {
-        char* data = new char[ih->file_hdr_->tot_len_];
+        char *data = new char[ih->file_hdr_->total_len_];
         ih->file_hdr_->serialize(data);
-        disk_manager_->write_page(ih->fd_, IX_FILE_HDR_PAGE, data, ih->file_hdr_->tot_len_);
+        disk_manager_->write_page(ih->fd_, IX_FILE_HDR_PAGE, data, ih->file_hdr_->total_len_);
         // 缓冲区的所有页刷到磁盘，注意这句话必须写在close_file前面
         bpm_->flush_all_pages(ih->fd_);
         disk_manager_->close_file(ih->fd_);
