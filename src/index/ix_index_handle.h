@@ -192,6 +192,8 @@ class IxIndexHandle {
    public:
     IxIndexHandle(DiskManager *disk_manager, BufferPoolManager *buffer_pool_manager, int fd);
 
+    int get_total_len();
+
     // for search
     bool get_value(const char *key, std::vector<Rid> *result, Transaction *transaction);
 
@@ -216,6 +218,8 @@ class IxIndexHandle {
 
     bool coalesce(IxNodeHandle **neighbor_node, IxNodeHandle **node, IxNodeHandle **parent, int index,
                   Transaction *transaction, bool *root_is_latched);
+    bool coalesce(IxNodeHandle **neighbor_node, IxNodeHandle **node, IxNodeHandle **parent, int index,
+                  Transaction *transaction);
 
     Iid lower_bound(const char *key);
 

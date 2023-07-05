@@ -63,12 +63,15 @@ struct IndexMeta {
         }
         return is;
     }
-    
+
     // 把索引的列名拼串返回， show index用
     auto GetAllColumnsString() -> std::string {
         std::string all_columns = "(";
-        for (const auto &col : cols) {
-            all_columns.append(col.name);
+        for (int i = 0; i < cols.size(); i++) {
+            all_columns.append(cols[i].name);
+            if (i != cols.size() - 1) {
+                all_columns += ",";
+            }
         }
         all_columns += ")";
         return all_columns;

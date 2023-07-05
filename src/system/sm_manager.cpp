@@ -254,11 +254,38 @@ void SmManager::create_index(const std::string& tab_name, const std::vector<std:
     }
     // void create_index(const std::string &filename, const std::vector<ColMeta> &index_cols)
     std::vector<ColMeta> index_cols;
+    int total_len = 0;
     for (const auto& col_name : col_names) {
         auto col = tab_meta.get_col(col_name);
+        total_len += col->len;
         index_cols.push_back(*col);
     }
+    IndexMeta index_meta = {.tab_name = tab_name};
+    index_meta.col_num = int(col_names.size());
+    index_meta.col_total_len = total_len;
+    index_meta.cols = index_cols;
+    tab_meta.indexes.push_back(index_meta);
+
     ix_manager_->create_index(tab_name, index_cols);
+
+    auto index_handle = ix_manager_->open_index(tab_name, index_cols);
+    auto file_handle = fhs_.at(tab_name).get();
+    for (RmScan scanner(file_handle); !scanner.is_end(); scanner.next()) {
+        auto rec = file_handle->get_record(scanner.rid(), context);
+        // 以下逻辑参考自
+        char* key = new char[total_len];
+        int offset = 0;
+        for (auto col : index_cols) {
+            memcpy(key + offset, rec->data + col.offset, col.len);
+            offset += col.len;
+        }
+        index_handle->insert_entry(key, scanner.rid(), context->txn_);
+    }
+
+    auto index_name = ix_manager_->get_index_name(tab_name, index_cols);
+    assert(ihs_.count(index_name) == 0);
+    ihs_.emplace(index_name, std::move(index_handle));
+    // ix_manager_->close_index(index_handle.get());
 }
 
 /**
@@ -267,7 +294,19 @@ void SmManager::create_index(const std::string& tab_name, const std::vector<std:
  * @param {vector<string>&} col_names 索引包含的字段名称
  * @param {Context*} context
  */
-void SmManager::drop_index(const std::string& tab_name, const std::vector<std::string>& col_names, Context* context) {}
+void SmManager::drop_index(const std::string& tab_name, const std::vector<std::string>& col_names, Context* context) {
+    TabMeta& tab_meta = db_.get_table(tab_name);
+    if (!tab_meta.is_index(col_names)) {
+        throw IndexNotFoundError(tab_name, col_names);
+    }
+    auto index_meta_iter = tab_meta.get_index_meta(col_names);
+    auto index_name = ix_manager_->get_index_name(tab_name, index_meta_iter->cols);
+
+    ix_manager_->close_index(ihs_.at(index_name).get());
+    ix_manager_->destroy_index(tab_name, index_meta_iter->cols);
+    ihs_.erase(index_name);
+    tab_meta.indexes.erase(index_meta_iter);
+}
 
 /**
  * @description: 删除索引
