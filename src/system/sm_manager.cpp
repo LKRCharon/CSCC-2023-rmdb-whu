@@ -331,6 +331,9 @@ void SmManager::show_index(const std::string& tab_name, Context* context) {
         std::string all_columns = entry.GetAllColumnsString();
         std::vector<std::string> index_info = {entry.tab_name, "unique", all_columns};
         printer.print_record(index_info, context);
+        outfile << "| " << entry.tab_name << " | "
+                << "unique"
+                << "|" << all_columns << " |\n";
     }
     printer.print_separator(context);
     outfile.close();
