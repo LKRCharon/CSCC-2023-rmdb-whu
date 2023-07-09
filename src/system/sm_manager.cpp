@@ -333,7 +333,7 @@ void SmManager::show_index(const std::string& tab_name, Context* context) {
         printer.print_record(index_info, context);
         outfile << "| " << entry.tab_name << " | "
                 << "unique"
-                << "|" << all_columns << " |\n";
+                << " | " << all_columns << " |\n";
     }
     printer.print_separator(context);
     outfile.close();
