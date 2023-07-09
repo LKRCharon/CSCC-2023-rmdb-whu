@@ -45,16 +45,7 @@ Rid RmFileHandle::insert_record(char* buf, Context* context) {
     // 注意考虑插入一条记录后页面已满的情况，需要更新file_hdr_.first_free_page_no
     // 可能next也是满的
     if (page_handle.page_hdr->num_records == page_handle.file_hdr->num_records_per_page) {
-        file_hdr_.first_free_page_no = -1;
-        // file_hdr_.first_free_page_no = page_handle.page_hdr->next_free_page_no;  //在现在阶段 应该都是-1
-        // // 绷不住了 358疯狂循环
-        //  while (file_hdr_.first_free_page_no != -1) {
-        //     auto page_handle_temp = fetch_page_handle(file_hdr_.first_free_page_no);
-        //     if (page_handle_temp.page_hdr->num_records != page_handle_temp.file_hdr->num_records_per_page) {
-        //         break;
-        //     }
-        //     file_hdr_.first_free_page_no = page_handle_temp.page_hdr->next_free_page_no;
-        // }
+        file_hdr_.first_free_page_no = page_handle.page_hdr->next_free_page_no;
     }
     return Rid{page_handle.page->get_page_id().page_no, slot_no};
 }
@@ -70,7 +61,7 @@ void RmFileHandle::insert_record(const Rid& rid, char* buf) {
     memcpy(slot, buf, file_hdr_.record_size);
     Bitmap::set(page_handle.bitmap, rid.slot_no);
 
-    bpm_->unpin_page(page_handle.page->get_page_id(),true);
+    bpm_->unpin_page(page_handle.page->get_page_id(), true);
 }
 
 /**
@@ -167,6 +158,8 @@ RmPageHandle RmFileHandle::create_page_handle() {
  */
 void RmFileHandle::release_page_handle(RmPageHandle& page_handle) {
     // 当page从已满变成未满，考虑如何更新：
+    page_handle.page_hdr->next_free_page_no = file_hdr_.first_free_page_no;
+    file_hdr_.first_free_page_no = page_handle.page->get_page_id().page_no;
     // 1. page_handle.page_hdr->next_free_page_no
     // 2. file_hdr_.first_free_page_no
     // if (file_hdr_.first_free_page_no != RM_NO_PAGE) {

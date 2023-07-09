@@ -41,16 +41,10 @@ class UpdateExecutor : public AbstractExecutor {
     // https://github.com/ruc-deke/rucbase-lab/blob/main/src/execution/executor_update.h
     std::unique_ptr<RmRecord> Next() override {
         // Get all necessary index files
-        // std::vector<IxIndexHandle *> ihs(tab_.cols.size(), nullptr);
-        // for (auto &set_clause : set_clauses_) {
-        //     auto lhs_col = tab_.get_col(set_clause.lhs.col_name);
-        //     if (lhs_col->index) {
-        //         size_t lhs_col_idx = lhs_col - tab_.cols.begin();
-        //         lab3 task3 Todo
-        //         获取需要的索引句柄,填充vector ihs
-        //         lab3 task3 Todo end
-        //     }
-        // }
+        std::vector<IxIndexHandle *> ihs(tab_.cols.size(), nullptr);
+        for (auto &set_clause : set_clauses_) {
+            auto lhs_col = tab_.get_col(set_clause.lhs.col_name);
+        }
         // Update each rid from record file and index file
         for (auto &rid : rids_) {
             auto rec = fh_->get_record(rid, context_);

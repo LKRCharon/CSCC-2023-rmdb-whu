@@ -46,6 +46,8 @@ struct IndexMeta {
     int col_num;                // 索引字段数量
     std::vector<ColMeta> cols;  // 索引包含的字段
 
+    int used_col_num;  // 最左匹配匹配了几个
+
     friend std::ostream &operator<<(std::ostream &os, const IndexMeta &index) {
         os << index.tab_name << " " << index.col_total_len << " " << index.col_num;
         for (auto &col : index.cols) {

@@ -149,7 +149,7 @@ class Portal {
             if (x->tag == T_SeqScan) {
                 return std::make_unique<SeqScanExecutor>(sm_manager_, x->tab_name_, x->conds_, context);
             } else {
-                return std::make_unique<IndexScanExecutor>(sm_manager_, x->tab_name_, x->conds_, x->index_col_names_,
+                return std::make_unique<IndexScanExecutor>(sm_manager_, x->tab_name_, x->conds_, x->index_meta_,
                                                            context);
             }
         } else if (auto x = std::dynamic_pointer_cast<JoinPlan>(plan)) {

@@ -144,7 +144,8 @@ void IxNodeHandle::insert_pairs(int pos, const char *key, const Rid *rid, int n)
     // 3. 通过rid获取n个连续键值对的rid值，并把n个rid值插入到pos位置
     int rid_len = sizeof(Rid);
     Rid *rid_begin = get_rid(pos);
-    memmove(rid_begin + n * rid_len, rid_begin, (page_hdr->num_key - pos) * rid_len);
+    // DEBUG: rid* 的指针不需要乘size
+    memmove(rid_begin + n , rid_begin, (page_hdr->num_key - pos) * rid_len);
     memcpy(rid_begin, rid, n * rid_len);
     // 4. 更新当前节点的键数量
     set_size(get_size() + n);

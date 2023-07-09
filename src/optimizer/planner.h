@@ -48,6 +48,9 @@ class Planner {
     // int get_indexNo(std::string tab_name, std::vector<Condition> curr_conds);
     bool get_index_cols(std::string tab_name, std::vector<Condition> curr_conds,
                         std::vector<std::string> &index_col_names);
+    // 都什么年代还在传indexnames 直接传indexmeta不好吗 
+    bool get_index_cols(std::string tab_name, std::vector<Condition> curr_conds,
+                        IndexMeta &index_meta, std::vector<Condition>& idx_conds);
 
     ColType interp_sv_type(ast::SvType sv_type) {
         std::map<ast::SvType, ColType> m = {{ast::SV_TYPE_INT, TYPE_INT},
