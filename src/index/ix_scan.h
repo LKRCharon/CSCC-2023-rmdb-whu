@@ -34,4 +34,6 @@ class IxScan : public RecScan {
     Rid rid() const override;
 
     const Iid &iid() const { return iid_; }
+
+    void set_end();
 };

@@ -40,16 +40,21 @@ class UpdateExecutor : public AbstractExecutor {
     }
     // https://github.com/ruc-deke/rucbase-lab/blob/main/src/execution/executor_update.h
     std::unique_ptr<RmRecord> Next() override {
-        // Get all necessary index files
-        std::vector<IxIndexHandle *> ihs(tab_.cols.size(), nullptr);
-        for (auto &set_clause : set_clauses_) {
-            auto lhs_col = tab_.get_col(set_clause.lhs.col_name);
-        }
         // Update each rid from record file and index file
         for (auto &rid : rids_) {
             auto rec = fh_->get_record(rid, context_);
-            // lab3 task3 Todo
-            // Remove old entry from index
+            for (size_t i = 0; i < tab_.indexes.size(); ++i) {
+                auto &index = tab_.indexes.at(i);
+                auto ih =
+                    sm_manager_->ihs_.at(sm_manager_->get_ix_manager()->get_index_name(tab_name_, index.cols)).get();
+                char *key = new char[index.col_total_len];
+                int offset = 0;
+                for (int j = 0; j < index.col_num; j++) {
+                    memcpy(key + offset, rec->data + index.cols[j].offset, index.cols[j].len);
+                    offset += index.cols[j].len;
+                }
+                ih->delete_entry(key, context_->txn_);
+            }
 
             // 按照setclause修改rec的数据
             for (auto &set_clause : set_clauses_) {
@@ -64,16 +69,22 @@ class UpdateExecutor : public AbstractExecutor {
                 val.init_raw(lhs_col->len);
                 memcpy(rec->data + lhs_col->offset, val.raw->data, lhs_col->len);
             }
-            // lab3 task3 Todo end
 
-            // lab3 task3 Todo
             // Update record in record file
             fh_->update_record(rid, rec->data, context_);
-            // lab3 task3 Todo end
 
-            // lab3 task3 Todo
-            // Insert new entry into index
-            // lab3 task3 Todo end
+            for (size_t i = 0; i < tab_.indexes.size(); ++i) {
+                auto &index = tab_.indexes.at(i);
+                auto ih =
+                    sm_manager_->ihs_.at(sm_manager_->get_ix_manager()->get_index_name(tab_name_, index.cols)).get();
+                char *key = new char[index.col_total_len];
+                int offset = 0;
+                for (int j = 0; j < index.col_num; j++) {
+                    memcpy(key + offset, rec->data + index.cols[j].offset, index.cols[j].len);
+                    offset += index.cols[j].len;
+                }
+                ih->insert_entry(key, rid, context_->txn_);
+            }
         }
         return nullptr;
     }

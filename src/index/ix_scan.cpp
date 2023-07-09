@@ -29,3 +29,5 @@ void IxScan::next() {
 }
 
 Rid IxScan::rid() const { return ih_->get_rid(iid_); }
+
+void IxScan::set_end() { end_ = iid_; }

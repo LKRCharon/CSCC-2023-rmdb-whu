@@ -18,22 +18,21 @@ See the Mulan PSL v2 for more details. */
 
 class IndexScanExecutor : public AbstractExecutor {
    private:
-    std::string tab_name_;              // 表名称
-    TabMeta tab_;                       // 表的元数据
-    std::vector<Condition> conds_;      // 扫描条件  charon:这里是已经处理好的，等号在最前 大于小于在后面
-    RmFileHandle *fh_;                  // 表的数据文件句柄
+    std::string tab_name_;          // 表名称
+    TabMeta tab_;                   // 表的元数据
+    std::vector<Condition> conds_;  // 扫描条件  charon:这里是已经处理好的，等号在最前 大于小于在后面
+    RmFileHandle *fh_;              // 表的数据文件句柄
     std::vector<ColMeta> cols_;         // 需要读取的字段
     size_t len_;                        // 选取出来的一条记录的长度
     std::vector<Condition> fed_conds_;  // 扫描条件，和conds_字段相同
 
-    int key_len_=0;        // 索引key的总长度
+    int key_len_ = 0;                           // 索引key的总长度
     std::vector<std::string> index_col_names_;  // index scan涉及到的索引包含的字段
     IndexMeta index_meta_;                      // index scan涉及到的索引元数据
     std::string index_name_;                    //索引对应的文件名
 
-
     Rid rid_;
-    std::unique_ptr<RecScan> scan_;
+    std::unique_ptr<IxScan> scan_;
 
     SmManager *sm_manager_;
 
@@ -111,65 +110,56 @@ class IndexScanExecutor : public AbstractExecutor {
         Iid lower = ih->leaf_begin();
         Iid upper = ih->leaf_end();
 
-        char *rhs_key = new char[index_meta_.col_total_len];
-        bool is_neq = false;//判断有没有不等号
-        for(auto i = 0;i<fed_conds_.size();i++){
-            const auto cond = fed_conds_.at(i); 
-                memcpy(rhs_key+index_meta_.cols.at(i).offset, cond.rhs_val.raw->data, index_meta_.cols.at(i).len);
-        }
+        char *key = new char[index_meta_.col_total_len];
+        memset(key, 0, index_meta_.col_total_len);
+
         // 根据索引的信息，调整lowerbound和upperbound的位置
         // 遍历cond 准备好key 改好upper和lower
-        for (auto &cond : fed_conds_) {
-                if (cond.op == OP_EQ) {
-                    lower = ih->lower_bound(rhs_key);
-                    upper = ih->upper_bound(rhs_key);
-                }
-                // lab3 task2 todo
-                else if (cond.op == OP_LT) {
-                    upper = ih->upper_bound(rhs_key);
-                } else if (cond.op == OP_GT) {
-                    lower = ih->upper_bound(rhs_key);
-                } else if (cond.op == OP_LE) {
-                    upper = ih->lower_bound(rhs_key);
-                } else if (cond.op == OP_GE) {
-                    lower = ih->lower_bound(rhs_key);
-                } else {
-                    throw InternalError("Unexpected op type");
-                }
+        int offset = 0;
+        for (int i = 0; i < fed_conds_.size(); i++) {
+            const auto cond = fed_conds_.at(i);
+            if (cond.op == OP_LE || cond.op == OP_LT) {
+                continue;
+            }
+            memcpy(key + offset, cond.rhs_val.raw->data, index_meta_.cols.at(i).len);
+            if (cond.op == OP_GT) {
+                lower = ih->upper_bound(key);
 
-                // 利用cond 进行索引扫描
-                // lab3 task2 todo end
-                break;
-            
+            } else {
+                lower = ih->lower_bound(key);
+            }
+            offset += index_meta_.cols.at(i).len;
         }
         scan_ = std::make_unique<IxScan>(ih, lower, upper, sm_manager_->get_bpm());
         // Get the first record
-        while (!scan_->is_end()) {
-            rid_ = scan_->rid();
-            auto rec = fh_->get_record(rid_, context_);
-            if (eval_conds(cols_, fed_conds_, rec.get())) {
-                break;
-            }
-            scan_->next();
-        }
+        // test：
+        // while (!scan_->is_end()) {
+        rid_ = scan_->rid();
+        // auto rec = fh_->get_record(rid_, context_);
+        // if (eval_conds(cols_, fed_conds_, rec.get())) {
+        //     break;
+        // }
+        // scan_->next();
+        // }
     }
 
     void nextTuple() {
         check_runtime_conds();
         assert(!is_end());
-        // lab3 task2 todo
-        // 扫描到下一个满足条件的记录,赋rid_,中止循环
-        // lab3 task2 todo end
-        for (scan_->next(); !scan_->is_end(); scan_->next()) {  // 用TableIterator遍历TableHeap中的所有Tuple
-            rid_ = scan_->rid();
-            try {
-                auto rec = fh_->get_record(rid_, context_);
-                if (eval_conds(cols_, fed_conds_, rec.get())) {
-                    break;
-                }
-            } catch (RecordNotFoundError &e) {
-                std::cerr << e.what() << std::endl;
+
+        scan_->next();
+        if (is_end()) {
+            return;
+        }
+        rid_ = scan_->rid();
+
+        try {
+            auto rec = fh_->get_record(rid_, context_);
+            if (!eval_conds(cols_, fed_conds_, rec.get())) {
+                scan_->set_end();
             }
+        } catch (RecordNotFoundError &e) {
+            std::cerr << e.what() << std::endl;
         }
     }
 

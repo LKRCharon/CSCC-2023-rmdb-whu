@@ -37,10 +37,7 @@ int IxNodeHandle::lower_bound(const char *target) const {
         // cmp 的值有-1,0,1 存一下
         int cmp_res = ix_compare(get_key(middle), target, file_hdr->col_types_, file_hdr->col_lens_);
         // 由于key是不重复的，可以在相等时直接返回
-        if (cmp_res == 0) {
-            return middle;
-        }
-        if (cmp_res == -1) {
+        if (cmp_res < 0) {
             left = middle + 1;
         } else {
             right = middle;
@@ -145,7 +142,7 @@ void IxNodeHandle::insert_pairs(int pos, const char *key, const Rid *rid, int n)
     int rid_len = sizeof(Rid);
     Rid *rid_begin = get_rid(pos);
     // DEBUG: rid* 的指针不需要乘size
-    memmove(rid_begin + n , rid_begin, (page_hdr->num_key - pos) * rid_len);
+    memmove(rid_begin + n, rid_begin, (page_hdr->num_key - pos) * rid_len);
     memcpy(rid_begin, rid, n * rid_len);
     // 4. 更新当前节点的键数量
     set_size(get_size() + n);
@@ -166,6 +163,9 @@ int IxNodeHandle::insert(const char *key, const Rid &value) {
     int cmp_res = ix_compare(get_key(key_index), key, file_hdr->col_types_, file_hdr->col_lens_);
 
     // 2. 如果key重复则不插入
+    if (cmp_res == 0) {
+        throw IndexEntryRepeatError();
+    }
     // 3. 如果key不重复则插入键值对
     if (key_index == get_size() || cmp_res > 0) {
         // 没必要多一步函数调用
@@ -208,8 +208,9 @@ int IxNodeHandle::remove(const char *key) {
     int key_index = lower_bound(key);
 
     // 2. 如果要删除的键值对存在，删除键值对
+    int cmp_res = ix_compare(get_key(key_index), key, file_hdr->col_types_, file_hdr->col_lens_);
     // 用&&短路，性能应该会好一点
-    if (key_index < get_size() && ix_compare(get_key(key_index), key, file_hdr->col_types_, file_hdr->col_lens_)) {
+    if (key_index < get_size() && cmp_res == 0) {
         erase_pair(key_index);
     }
     // 3. 返回完成删除操作后的键值对数量
