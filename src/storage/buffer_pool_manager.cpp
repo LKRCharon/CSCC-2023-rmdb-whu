@@ -234,3 +234,25 @@ void BufferPoolManager::flush_all_pages(int fd) {
 
     // ref：https://github.com/ruc-deke/rucbase-lab/blob/main/src/storage/buffer_pool_manager.cpp
 }
+
+void BufferPoolManager::delete_all_pages(int fd) {
+    std::scoped_lock lock{latch_};
+    for (auto iter = page_table_.begin(); iter != page_table_.end();) {
+        // LOG_DEBUG()
+        auto page = pages_ + iter->second;
+        // 要加一个fd的判断 参考自rucbase的函数
+        if (page->get_page_id().fd == fd) {
+            // 3.2 从页表中删除目标页
+            iter = page_table_.erase(iter);
+            // 3.3 重置元数据 最佳方法是什么？
+            page->set_page_id({});
+            page->is_dirty_ = false;
+            page->pin_count_ = 0;
+            page->reset_memory();
+            // 3.4加入free_list_
+            free_list_.push_back(iter->second);
+        } else {
+            iter++;
+        }
+    }
+}

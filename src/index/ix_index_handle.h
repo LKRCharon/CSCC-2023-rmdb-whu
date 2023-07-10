@@ -194,6 +194,8 @@ class IxIndexHandle {
 
     int get_total_len();
 
+    int get_fd();
+
     // for search
     bool get_value(const char *key, std::vector<Rid> *result, Transaction *transaction);
 
@@ -201,7 +203,7 @@ class IxIndexHandle {
                                                    bool find_first = false);
 
     // for insert
-    page_id_t insert_entry(const char *key, const Rid &value, Transaction *transaction);
+    bool insert_entry(const char *key, const Rid &value, Transaction *transaction);
 
     IxNodeHandle *split(IxNodeHandle *node);
 

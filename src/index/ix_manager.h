@@ -131,8 +131,10 @@ class IxManager {
         disk_manager_->close_file(fd);
     }
 
-    void destroy_index(const std::string &filename, const std::vector<ColMeta> &index_cols) {
+    void destroy_index(const std::string &filename, const std::vector<ColMeta> &index_cols, int fd) {
         std::string ix_name = get_index_name(filename, index_cols);
+        bpm_->delete_all_pages(fd);
+        disk_manager_->close_file(fd);
         disk_manager_->destroy_file(ix_name);
     }
 

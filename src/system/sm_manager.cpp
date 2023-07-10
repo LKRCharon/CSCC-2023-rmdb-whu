@@ -279,13 +279,16 @@ void SmManager::create_index(const std::string& tab_name, const std::vector<std:
             memcpy(key + offset, rec->data + col.offset, col.len);
             offset += col.len;
         }
-        index_handle->insert_entry(key, scanner.rid(), context->txn_);
+        int is_insert = index_handle->insert_entry(key, scanner.rid(), context->txn_);
+        // if(!is_insert){
+        //     throw 
+        // }
     }
 
     auto index_name = ix_manager_->get_index_name(tab_name, index_cols);
     assert(ihs_.count(index_name) == 0);
+    ix_manager_->close_index(index_handle.get());
     ihs_.emplace(index_name, std::move(index_handle));
-    // ix_manager_->close_index(index_handle.get());
 }
 
 /**
@@ -301,9 +304,9 @@ void SmManager::drop_index(const std::string& tab_name, const std::vector<std::s
     }
     auto index_meta_iter = tab_meta.get_index_meta(col_names);
     auto index_name = ix_manager_->get_index_name(tab_name, index_meta_iter->cols);
+    auto index_handle = ix_manager_->open_index(tab_name, index_meta_iter->cols);
 
-    ix_manager_->close_index(ihs_.at(index_name).get());
-    ix_manager_->destroy_index(tab_name, index_meta_iter->cols);
+    ix_manager_->destroy_index(tab_name, index_meta_iter->cols, index_handle->get_fd());
     ihs_.erase(index_name);
     tab_meta.indexes.erase(index_meta_iter);
 }

@@ -164,7 +164,7 @@ int IxNodeHandle::insert(const char *key, const Rid &value) {
 
     // 2. 如果key重复则不插入
     if (cmp_res == 0) {
-        throw IndexEntryRepeatError();
+        return get_size();
     }
     // 3. 如果key不重复则插入键值对
     if (key_index == get_size() || cmp_res > 0) {
@@ -386,7 +386,7 @@ void IxIndexHandle::insert_into_parent(IxNodeHandle *old_node, const char *key, 
  * @param transaction 事务指针
  * @return page_id_t 插入到的叶结点的page_no
  */
-page_id_t IxIndexHandle::insert_entry(const char *key, const Rid &value, Transaction *transaction) {
+bool IxIndexHandle::insert_entry(const char *key, const Rid &value, Transaction *transaction) {
     // Todo:
     std::scoped_lock lock{root_latch_};
     // 1. 查找key值应该插入到哪个叶子节点
@@ -767,3 +767,5 @@ void IxIndexHandle::maintain_child(IxNodeHandle *node, int child_idx) {
         bpm_->unpin_page(child->get_page_id(), true);
     }
 }
+
+int IxIndexHandle::get_fd() { return fd_; }

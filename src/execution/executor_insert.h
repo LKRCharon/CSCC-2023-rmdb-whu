@@ -12,6 +12,7 @@ See the Mulan PSL v2 for more details. */
 #include <string>
 #include "common/common.h"
 #include "common/logger.h"
+#include "error.h"
 #include "execution_defs.h"
 #include "execution_manager.h"
 #include "executor_abstract.h"
@@ -62,7 +63,6 @@ class InsertExecutor : public AbstractExecutor {
         }
         // Insert into record file
         rid_ = fh_->insert_record(rec.data, context_);
-
         // Insert into index
         for (size_t i = 0; i < tab_.indexes.size(); ++i) {
             auto &index = tab_.indexes[i];
@@ -73,8 +73,13 @@ class InsertExecutor : public AbstractExecutor {
                 memcpy(key + offset, rec.data + index.cols[j].offset, index.cols[j].len);
                 offset += index.cols[j].len;
             }
-            ih->insert_entry(key, rid_, context_->txn_);
+            bool is_insert = ih->insert_entry(key, rid_, context_->txn_);
+            if (!is_insert) {
+                fh_->delete_record(rid_, context_);
+                throw IndexEntryRepeatError();
+            }
         }
+
         return nullptr;
     }
     Rid &rid() override { return rid_; }

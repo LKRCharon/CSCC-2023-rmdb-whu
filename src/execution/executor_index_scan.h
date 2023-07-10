@@ -131,19 +131,19 @@ class IndexScanExecutor : public AbstractExecutor {
             offset += index_meta_.cols.at(i).len;
         }
         scan_ = std::make_unique<IxScan>(ih, lower, upper, sm_manager_->get_bpm());
-        // Get the first record
-        // test：
-        // while (!scan_->is_end()) {
+
         rid_ = scan_->rid();
-        // auto rec = fh_->get_record(rid_, context_);
-        // if (eval_conds(cols_, fed_conds_, rec.get())) {
-        //     break;
-        // }
-        // scan_->next();
-        // }
+        try {
+            auto rec = fh_->get_record(rid_, context_);
+            if (!eval_conds(cols_, fed_conds_, rec.get())) {
+                scan_->set_end();
+            }
+        } catch (RecordNotFoundError &e) {
+            std::cerr << e.what() << std::endl;
+        }
     }
 
-    void nextTuple() {
+    void nextTuple() override {
         check_runtime_conds();
         assert(!is_end());
 

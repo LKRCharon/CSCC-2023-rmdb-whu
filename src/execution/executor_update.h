@@ -83,7 +83,11 @@ class UpdateExecutor : public AbstractExecutor {
                     memcpy(key + offset, rec->data + index.cols[j].offset, index.cols[j].len);
                     offset += index.cols[j].len;
                 }
-                ih->insert_entry(key, rid, context_->txn_);
+                bool is_insert = ih->insert_entry(key, rid, context_->txn_);
+                if (!is_insert) {
+                    fh_->delete_record(rid, context_);
+                    throw IndexEntryRepeatError();
+                }
             }
         }
         return nullptr;
