@@ -25,7 +25,8 @@ class IxScan : public RecScan {
 
    public:
     IxScan(const IxIndexHandle *ih, const Iid &lower, const Iid &upper, BufferPoolManager *bpm)
-        : ih_(ih), iid_(lower), end_(upper), bpm_(bpm) {}
+        : ih_(ih), iid_(lower), end_(upper), bpm_(bpm) {
+        }
 
     void next() override;
 

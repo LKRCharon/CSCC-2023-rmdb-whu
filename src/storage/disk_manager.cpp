@@ -59,7 +59,7 @@ void DiskManager::read_page(int fd, page_id_t page_no, char *offset, int num_byt
     off_t offset_in_file = static_cast<off_t>(page_no) * PAGE_SIZE;
     off_t result = lseek(fd, offset_in_file, SEEK_SET);
     if (result == -1) {
-        throw InternalError("DiskManager::write_page Error");
+        throw InternalError("DiskManager::lseek Error");
     }
 
     // 2.调用read()函数

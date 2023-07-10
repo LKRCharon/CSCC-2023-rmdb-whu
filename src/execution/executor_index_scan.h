@@ -124,22 +124,22 @@ class IndexScanExecutor : public AbstractExecutor {
             memcpy(key + offset, cond.rhs_val.raw->data, index_meta_.cols.at(i).len);
             if (cond.op == OP_GT) {
                 lower = ih->upper_bound(key);
-
             } else {
                 lower = ih->lower_bound(key);
             }
             offset += index_meta_.cols.at(i).len;
         }
         scan_ = std::make_unique<IxScan>(ih, lower, upper, sm_manager_->get_bpm());
-
-        rid_ = scan_->rid();
-        try {
-            auto rec = fh_->get_record(rid_, context_);
-            if (!eval_conds(cols_, fed_conds_, rec.get())) {
-                scan_->set_end();
+        if (!is_end()) {
+            rid_ = scan_->rid();
+            try {
+                auto rec = fh_->get_record(rid_, context_);
+                if (!eval_conds(cols_, fed_conds_, rec.get())) {
+                    scan_->set_end();
+                }
+            } catch (RecordNotFoundError &e) {
+                std::cerr << e.what() << std::endl;
             }
-        } catch (RecordNotFoundError &e) {
-            std::cerr << e.what() << std::endl;
         }
     }
 
@@ -177,9 +177,6 @@ class IndexScanExecutor : public AbstractExecutor {
     void feed(const std::map<TabCol, Value> &feed_dict) override {
         fed_conds_ = conds_;
         for (auto &cond : fed_conds_) {
-            // lab3 task2 todo
-            // 参考seqscan
-            // lab3 task2 todo end
             if (!cond.is_rhs_val && cond.rhs_col.tab_name != tab_name_) {
                 cond.is_rhs_val = true;
                 cond.rhs_val = feed_dict.at(cond.rhs_col);
