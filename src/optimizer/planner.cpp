@@ -39,7 +39,6 @@ bool Planner::get_index_cols(std::string tab_name, std::vector<Condition> curr_c
         int eq_num = 0;
         int neq_num = 0;
 
-
         // 遍历索引的列
         for (int i = 0; i < static_cast<int>(index.cols.size()); i++) {
             auto col = index.cols.at(i);
@@ -51,10 +50,10 @@ bool Planner::get_index_cols(std::string tab_name, std::vector<Condition> curr_c
             //  没找到
             if (iter == curr_conds.end()) {
                 // neq对应的第二遍没找到，结束
-                if (neq_num!=0) {
+                if (neq_num != 0) {
                     index_meta = index;
                     // return true;
-                    return (neq_num+eq_num == index_conds_count);
+                    return (neq_num + eq_num == index_conds_count);
                 }
                 break;
             }
@@ -66,17 +65,18 @@ bool Planner::get_index_cols(std::string tab_name, std::vector<Condition> curr_c
             // where id>1 and id<10 防止反复查一个条件死循环，查到了就删掉
             curr_conds.erase(iter);
 
-            if (neq_num == 0) {
-                if (iter->op == OP_EQ) {
+            if (iter->op == OP_EQ) {
+                if (neq_num == 0) {
                     eq_num++;
                     if (eq_num == index_conds_count) {
                         index_meta = index;
                         return true;
                     }
-                } else {
-                    neq_num++;
-                    i--;
                 }
+                return false;
+            } else {
+                neq_num++;
+                i--;
             }
         }
     }

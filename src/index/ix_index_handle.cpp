@@ -75,6 +75,30 @@ int IxNodeHandle::upper_bound(const char *target) const {
 }
 
 /**
+ * @brief 在 **leaf** node中查找第一个>target的key_idx
+ *
+ * @return key_idx，范围为[0,num_key)，如果返回的key_idx=num_key，则表示target大于等于最后一个key
+ * @note 注意此处的范围从1开始
+ */
+int IxNodeHandle::upper_bound_leaf(const char *target) const {
+
+    int left = 0, right = page_hdr->num_key;
+    int middle;
+
+    while (left < right) {
+        middle = (left + right) / 2;
+        int cmp_res = ix_compare(get_key(middle), target, file_hdr->col_types_, file_hdr->col_lens_);
+        if (cmp_res <= 0) {
+            left = middle + 1;
+        } else {
+            right = middle;
+        }
+    }
+
+    return left;
+}
+
+/**
  * @brief 用于叶子结点根据key来查找该结点中的键值对
  * 值value作为传出参数，函数返回是否查找成功
  *
@@ -639,7 +663,7 @@ Iid IxIndexHandle::lower_bound(const char *key) {
  */
 Iid IxIndexHandle::upper_bound(const char *key) {
     auto node = find_leaf_page(key, Operation::FIND, nullptr).first;
-    int key_idx = node->upper_bound(key);
+    int key_idx = node->upper_bound_leaf(key);
 
     Iid iid;
     if (key_idx == node->get_size()) {

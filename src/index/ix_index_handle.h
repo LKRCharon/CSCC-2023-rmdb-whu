@@ -131,6 +131,7 @@ class IxNodeHandle {
     int lower_bound(const char *target) const;
 
     int upper_bound(const char *target) const;
+    int upper_bound_leaf(const char *target) const;
 
     void insert_pairs(int pos, const char *key, const Rid *rid, int n);
 

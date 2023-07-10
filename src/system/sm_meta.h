@@ -65,7 +65,12 @@ struct IndexMeta {
         }
         return is;
     }
-
+    ColMeta get_col(std::string col_name){
+        auto iter = std::find_if(cols.begin(),cols.end(),[col_name](const auto &col){
+            return col.name == col_name;
+        });
+        return *iter;
+    }
     // 把索引的列名拼串返回， show index用
     auto GetAllColumnsString() -> std::string {
         std::string all_columns = "(";

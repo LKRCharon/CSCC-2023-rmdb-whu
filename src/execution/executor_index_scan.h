@@ -121,13 +121,14 @@ class IndexScanExecutor : public AbstractExecutor {
             if (cond.op == OP_LE || cond.op == OP_LT) {
                 continue;
             }
-            memcpy(key + offset, cond.rhs_val.raw->data, index_meta_.cols.at(i).len);
+            auto index_col = index_meta_.get_col(cond.lhs_col.col_name);
+            memcpy(key + offset, cond.rhs_val.raw->data, index_col.len);
             if (cond.op == OP_GT) {
                 lower = ih->upper_bound(key);
             } else {
                 lower = ih->lower_bound(key);
             }
-            offset += index_meta_.cols.at(i).len;
+            offset += index_col.len;
         }
         scan_ = std::make_unique<IxScan>(ih, lower, upper, sm_manager_->get_bpm());
         if (!is_end()) {
