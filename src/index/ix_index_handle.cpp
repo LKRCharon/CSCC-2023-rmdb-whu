@@ -73,6 +73,22 @@ int IxNodeHandle::upper_bound(const char *target) const {
 
     return left;
 }
+int IxNodeHandle::upper_bound(const char *target, int used_num) const {
+    int left = 1, right = page_hdr->num_key;
+    int middle;
+
+    while (left < right) {
+        middle = (left + right) / 2;
+        int cmp_res = ix_compare(get_key(middle), target, file_hdr->col_types_, file_hdr->col_lens_, used_num);
+        if (cmp_res <= 0) {
+            left = middle + 1;
+        } else {
+            right = middle;
+        }
+    }
+
+    return left;
+}
 
 /**
  * @brief 在 **leaf** node中查找第一个>target的key_idx
@@ -80,14 +96,13 @@ int IxNodeHandle::upper_bound(const char *target) const {
  * @return key_idx，范围为[0,num_key)，如果返回的key_idx=num_key，则表示target大于等于最后一个key
  * @note 注意此处的范围从1开始
  */
-int IxNodeHandle::upper_bound_leaf(const char *target) const {
-
+int IxNodeHandle::upper_bound_leaf(const char *target, int used_num) const {
     int left = 0, right = page_hdr->num_key;
     int middle;
 
     while (left < right) {
         middle = (left + right) / 2;
-        int cmp_res = ix_compare(get_key(middle), target, file_hdr->col_types_, file_hdr->col_lens_);
+        int cmp_res = ix_compare(get_key(middle), target, file_hdr->col_types_, file_hdr->col_lens_, used_num);
         if (cmp_res <= 0) {
             left = middle + 1;
         } else {
@@ -276,6 +291,26 @@ std::pair<IxNodeHandle *, bool> IxIndexHandle::find_leaf_page(const char *key, O
     auto node = root;
     while (!node->is_leaf_page()) {
         auto child = fetch_node(node->internal_lookup(key));
+        bpm_->unpin_page(node->get_page_id(), false);
+        node = child;
+    }
+    // 3. 找到包含该key值的叶子结点停止查找，并返回叶子节点
+
+    return std::make_pair(node, false);
+}
+
+// 这个函数重载，把Operation替换为了used nums，只在indexhandle调用find时才使用，为了解决多列索引的单列scan问题
+std::pair<IxNodeHandle *, bool> IxIndexHandle::find_leaf_page(const char *key, int used_num, Transaction *transaction,
+                                                              bool find_first) {
+    // Todo:
+    // 1. 获取根节点
+    auto root = fetch_node(file_hdr_->root_page_);
+
+    // 2. 从根节点开始不断向下查找目标key
+    auto node = root;
+    while (!node->is_leaf_page()) {
+        int key_index = node->upper_bound(key, used_num);
+        auto child = fetch_node(node->value_at(key_index - 1));
         bpm_->unpin_page(node->get_page_id(), false);
         node = child;
     }
@@ -646,8 +681,8 @@ Rid IxIndexHandle::get_rid(const Iid &iid) const {
  * @note 上层传入的key本来是int类型，通过(const char *)&key进行了转换
  * 可用*(int *)key转换回去
  */
-Iid IxIndexHandle::lower_bound(const char *key) {
-    auto node = find_leaf_page(key, Operation::FIND, nullptr).first;
+Iid IxIndexHandle::lower_bound(const char *key, int used_num) {
+    auto node = find_leaf_page(key, used_num, nullptr).first;
     int key_idx = node->lower_bound(key);
 
     Iid iid = {.page_no = node->get_page_no(), .slot_no = key_idx};
@@ -661,9 +696,9 @@ Iid IxIndexHandle::lower_bound(const char *key) {
  * @param key
  * @return Iid
  */
-Iid IxIndexHandle::upper_bound(const char *key) {
-    auto node = find_leaf_page(key, Operation::FIND, nullptr).first;
-    int key_idx = node->upper_bound_leaf(key);
+Iid IxIndexHandle::upper_bound(const char *key, int used_num) {
+    auto node = find_leaf_page(key, used_num, nullptr).first;
+    int key_idx = node->upper_bound_leaf(key, used_num);
 
     Iid iid;
     if (key_idx == node->get_size()) {

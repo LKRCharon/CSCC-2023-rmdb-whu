@@ -63,7 +63,6 @@ bool Planner::get_index_cols(std::string tab_name, std::vector<Condition> curr_c
             // 在conds里找到索引对应的列，且为eq
             idx_conds.push_back(*iter);
             // where id>1 and id<10 防止反复查一个条件死循环，查到了就删掉
-            curr_conds.erase(iter);
 
             if (iter->op == OP_EQ) {
                 if (neq_num == 0) {
@@ -72,11 +71,13 @@ bool Planner::get_index_cols(std::string tab_name, std::vector<Condition> curr_c
                         index_meta = index;
                         return true;
                     }
+                } else {
+                    return false;
                 }
-                return false;
             } else {
                 neq_num++;
                 i--;
+                curr_conds.erase(iter);
             }
         }
     }

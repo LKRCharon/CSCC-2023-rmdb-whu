@@ -10,6 +10,7 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
+#include <set>
 #include "execution_defs.h"
 #include "execution_manager.h"
 #include "executor_abstract.h"
@@ -30,6 +31,7 @@ class IndexScanExecutor : public AbstractExecutor {
     std::vector<std::string> index_col_names_;  // index scan涉及到的索引包含的字段
     IndexMeta index_meta_;                      // index scan涉及到的索引元数据
     std::string index_name_;                    //索引对应的文件名
+    // int used_index_num = 0;  //使用的索引列数，考虑多列索引但是where是单列的情况
 
     Rid rid_;
     std::unique_ptr<IxScan> scan_;
@@ -115,18 +117,29 @@ class IndexScanExecutor : public AbstractExecutor {
 
         // 根据索引的信息，调整lowerbound和upperbound的位置
         // 遍历cond 准备好key 改好upper和lower
+        std::set<std::string> used_col_names_set;
         int offset = 0;
         for (int i = 0; i < fed_conds_.size(); i++) {
             const auto cond = fed_conds_.at(i);
-            if (cond.op == OP_LE || cond.op == OP_LT) {
-                continue;
-            }
             auto index_col = index_meta_.get_col(cond.lhs_col.col_name);
-            memcpy(key + offset, cond.rhs_val.raw->data, index_col.len);
-            if (cond.op == OP_GT) {
-                lower = ih->upper_bound(key);
+            if (used_col_names_set.count(cond.lhs_col.col_name) == 0) {
+                used_col_names_set.emplace(cond.lhs_col.col_name);
+                memcpy(key + offset, cond.rhs_val.raw->data, index_col.len);
             } else {
-                lower = ih->lower_bound(key);
+                memcpy(key + offset - index_col.len, cond.rhs_val.raw->data, index_col.len);
+            }
+            int used_index_num = (int)used_col_names_set.size();
+            if (cond.op == OP_EQ) {
+                lower = ih->lower_bound(key, used_index_num);
+                upper = ih->upper_bound(key, used_index_num);
+            } else if (cond.op == OP_GE) {
+                lower = ih->lower_bound(key, used_index_num);
+            } else if (cond.op == OP_LE) {
+                upper = ih->upper_bound(key, used_index_num);
+            } else if (cond.op == OP_GT) {
+                lower = ih->upper_bound(key, used_index_num);
+            } else if (cond.op == OP_LT) {
+                upper = ih->lower_bound(key, used_index_num);
             }
             offset += index_col.len;
         }

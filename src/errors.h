@@ -115,7 +115,7 @@ class ColumnNotFoundError : public RMDBError {
 class IndexNotFoundError : public RMDBError {
    public:
     IndexNotFoundError(const std::string &tab_name, const std::vector<std::string> &col_names) {
-        _msg += "Index not found: " + tab_name + ".(";
+        _msg += "Index not found: " + tab_name + "(";
         for (size_t i = 0; i < col_names.size(); ++i) {
             if (i > 0) _msg += ", ";
             _msg += col_names[i];

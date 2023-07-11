@@ -105,6 +105,11 @@ void SmManager::open_db(const std::string& db_name) {
         for (size_t i = 0; i < tab.cols.size(); i++) {
             auto& col = tab.cols[i];
         }
+        for (auto& index : tab.indexes) {
+            auto index_handle = ix_manager_->open_index(tab.name, index.cols);
+            auto index_name = ix_manager_->get_index_name(tab.name, index.cols);
+            ihs_.emplace(index_name, std::move(index_handle));
+        }
     }
 }
 
@@ -237,6 +242,10 @@ void SmManager::drop_table(const std::string& tab_name, Context* context) {
         rm_manager_->close_file(file_handle_iter->second.get());
         fhs_.erase(tab_name);
     }
+    TabMeta tab = db_.get_table(tab_name);
+    for (auto& index : tab.indexes) {
+        drop_index(tab_name, index.cols,context);
+    }
     rm_manager_->destroy_file(tab_name);
     db_.tabs_.erase(tab_name);
 }
@@ -280,14 +289,11 @@ void SmManager::create_index(const std::string& tab_name, const std::vector<std:
             offset += col.len;
         }
         int is_insert = index_handle->insert_entry(key, scanner.rid(), context->txn_);
-        // if(!is_insert){
-        //     throw 
-        // }
     }
 
     auto index_name = ix_manager_->get_index_name(tab_name, index_cols);
     assert(ihs_.count(index_name) == 0);
-    ix_manager_->close_index(index_handle.get());
+    // ix_manager_->close_index(index_handle.get());
     ihs_.emplace(index_name, std::move(index_handle));
 }
 
@@ -317,7 +323,12 @@ void SmManager::drop_index(const std::string& tab_name, const std::vector<std::s
  * @param {vector<ColMeta>&} 索引包含的字段元数据
  * @param {Context*} context
  */
-void SmManager::drop_index(const std::string& tab_name, const std::vector<ColMeta>& cols, Context* context) {}
+void SmManager::drop_index(const std::string& tab_name, const std::vector<ColMeta>& cols, Context* context) {
+    auto index_name = ix_manager_->get_index_name(tab_name, cols);
+    ihs_.erase(index_name);
+    auto index_handle = ix_manager_->open_index(tab_name, cols);
+    ix_manager_->destroy_index(tab_name, cols, index_handle->get_fd());
+}
 
 /**
  * @description: 显示索引

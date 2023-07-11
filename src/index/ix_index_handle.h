@@ -64,6 +64,17 @@ inline int ix_compare(const char *a, const char *b, const std::vector<ColType> &
     return 0;
 }
 
+inline int ix_compare(const char *a, const char *b, const std::vector<ColType> &col_types,
+                      const std::vector<int> &col_lens, int used_num) {
+    int offset = 0;
+    for (size_t i = 0; i < used_num; ++i) {
+        int res = ix_compare(a + offset, b + offset, col_types[i], col_lens[i]);
+        if (res != 0) return res;
+        offset += col_lens[i];
+    }
+    return 0;
+}
+
 /* 管理B+树中的每个节点 */
 class IxNodeHandle {
     friend class IxIndexHandle;
@@ -131,7 +142,10 @@ class IxNodeHandle {
     int lower_bound(const char *target) const;
 
     int upper_bound(const char *target) const;
-    int upper_bound_leaf(const char *target) const;
+    // a,b 两列索引,upper bound a>1 and a<10 传used_num = 1;
+    int upper_bound(const char *target, int used_num) const;
+
+    int upper_bound_leaf(const char *target, int used_num) const;
 
     void insert_pairs(int pos, const char *key, const Rid *rid, int n);
 
@@ -202,6 +216,8 @@ class IxIndexHandle {
 
     std::pair<IxNodeHandle *, bool> find_leaf_page(const char *key, Operation operation, Transaction *transaction,
                                                    bool find_first = false);
+    std::pair<IxNodeHandle *, bool> find_leaf_page(const char *key, int used_num, Transaction *transaction,
+                                                   bool find_first = false);
 
     // for insert
     bool insert_entry(const char *key, const Rid &value, Transaction *transaction);
@@ -224,9 +240,9 @@ class IxIndexHandle {
     bool coalesce(IxNodeHandle **neighbor_node, IxNodeHandle **node, IxNodeHandle **parent, int index,
                   Transaction *transaction);
 
-    Iid lower_bound(const char *key);
+    Iid lower_bound(const char *key, int used_nums);
 
-    Iid upper_bound(const char *key);
+    Iid upper_bound(const char *key, int used_nums);
 
     Iid leaf_end() const;
 
