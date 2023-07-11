@@ -226,7 +226,7 @@ void IxNodeHandle::erase_pair(int pos) {
     int key_len = file_hdr->col_tot_len_;
     char *key = get_key(pos);
     memmove(key, key + key_len, num_after * key_len);  // erase
-
+    memset(key+key_len*num_after,0,key_len);
     // 2. 删除该位置的rid
     int rid_len = sizeof(Rid);
     Rid *rid = get_rid(pos);
@@ -285,10 +285,20 @@ std::pair<IxNodeHandle *, bool> IxIndexHandle::find_leaf_page(const char *key, O
                                                               Transaction *transaction, bool find_first) {
     // Todo:
     // 1. 获取根节点
-    auto root = fetch_node(file_hdr_->root_page_);
-
+    IxNodeHandle *node;
+    // 没有根节点，delete全删了会出现这种情况，新建根节点，且为叶子
+    if (file_hdr_->root_page_ == INVALID_PAGE_ID) {
+        node = create_node();
+        node->page_hdr->num_key = 0;
+        node->page_hdr->is_leaf = true;
+        node->page_hdr->next_free_page_no = IX_NO_PAGE;
+        node->page_hdr->parent = IX_NO_PAGE;
+        node->page_hdr->prev_leaf = IX_LEAF_HEADER_PAGE;
+        node->page_hdr->next_leaf = IX_LEAF_HEADER_PAGE;
+    } else {
+        node = fetch_node(file_hdr_->root_page_);
+    }
     // 2. 从根节点开始不断向下查找目标key
-    auto node = root;
     while (!node->is_leaf_page()) {
         auto child = fetch_node(node->internal_lookup(key));
         bpm_->unpin_page(node->get_page_id(), false);
@@ -304,10 +314,20 @@ std::pair<IxNodeHandle *, bool> IxIndexHandle::find_leaf_page(const char *key, i
                                                               bool find_first) {
     // Todo:
     // 1. 获取根节点
-    auto root = fetch_node(file_hdr_->root_page_);
-
+    IxNodeHandle *node;
+    // 没有根节点，delete全删了会出现这种情况，新建根节点，且为叶子
+    if (file_hdr_->root_page_ == INVALID_PAGE_ID) {
+        node = create_node();
+        node->page_hdr->num_key = 0;
+        node->page_hdr->is_leaf = true;
+        node->page_hdr->next_free_page_no = IX_NO_PAGE;
+        node->page_hdr->parent = IX_NO_PAGE;
+        node->page_hdr->prev_leaf = IX_LEAF_HEADER_PAGE;
+        node->page_hdr->next_leaf = IX_LEAF_HEADER_PAGE;
+    } else {
+        node = fetch_node(file_hdr_->root_page_);
+    }
     // 2. 从根节点开始不断向下查找目标key
-    auto node = root;
     while (!node->is_leaf_page()) {
         int key_index = node->upper_bound(key, used_num);
         auto child = fetch_node(node->value_at(key_index - 1));
@@ -558,11 +578,11 @@ bool IxIndexHandle::adjust_root(IxNodeHandle *old_root_node) {
     // 2. 如果old_root_node是叶结点，且大小为0，则直接更新root page
     if (old_root_node->is_leaf_page() && old_root_node->get_size() == 0) {
         release_node_handle(*old_root_node);
-        file_hdr_->root_page_ = INVALID_PAGE_ID;
+        // file_hdr_->root_page_ = INVALID_PAGE_ID;
         return true;
     }
     // 1. 如果old_root_node是内部结点，并且大小为1，则直接把它的孩子更新成新的根结点
-    if (old_root_node->get_size() == 1) {
+    if (!old_root_node->is_leaf_page() && old_root_node->get_size() == 1) {
         auto new_root = fetch_node(old_root_node->value_at(0));
         new_root->set_parent_page_no(INVALID_PAGE_ID);
         file_hdr_->root_page_ = new_root->get_page_no();
