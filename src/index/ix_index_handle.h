@@ -242,7 +242,7 @@ class IxIndexHandle {
 
     Iid lower_bound(const char *key, int used_nums);
 
-    Iid upper_bound(const char *key, int used_nums);
+    Iid upper_bound(const char *key, int used_num,bool is_upper);
 
     Iid leaf_end() const;
 

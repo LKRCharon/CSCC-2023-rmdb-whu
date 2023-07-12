@@ -1,5 +1,7 @@
 create table d (id int, name char(16),test bigint,test2 bigint,test3 float);
 create index d(id,test3);
+create index d(test3,id);
+create index d(test,id);
 insert into d values(1,'name',1,2,0.588235);
 insert into d values(2,'name',1,2,1.176471);
 insert into d values(3,'name',1,2,1.764706);
@@ -999,4 +1001,5 @@ insert into d values(996,'name',1,2,585.882353);
 insert into d values(997,'name',1,2,586.470588);
 insert into d values(998,'name',1,2,587.058824);
 insert into d values(999,'name',1,2,587.647059);
-select * from d where id = 1000;
+insert into d values(1000,'name',1,2,588.235294);
+select * from d where test=1;

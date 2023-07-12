@@ -1,8 +1,11 @@
-with open("input.sql", "w") as file:
-    file.write('create table d (id int, name char(16),test bigint,test2 bigint,test3 bigint);\n');
-    file.write('create index d(id);\n');
-    for id in range(1,2001):
-        file.write("insert into d values(%d,'name',1,2,3);\n"%id);
-    file.write('select * from d where id = 1000;');
+with open("aadebugsql/multiple1.sql", "w") as file:
+    file.write('create table d (id int, name char(16),test bigint,test2 bigint,test3 float);\n');
+    file.write('create index d(id,test3);\n');
+    file.write('create index d(test3,id);\n');
+    file.write('create index d(test,id);\n');
+    # for id in range(1,120000):
+    for id in range(1,1001):
+        file.write(f"insert into d values({id},'name',1,2,{id/1.7:.6f});\n");
+    file.write('select * from d where test=1;');
 
     

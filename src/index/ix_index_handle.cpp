@@ -223,7 +223,7 @@ void IxNodeHandle::erase_pair(int pos) {
     int key_len = file_hdr->col_tot_len_;
     char *key = get_key(pos);
     memmove(key, key + key_len, num_after * key_len);  // erase
-    memset(key+key_len*num_after,0,key_len);
+    memset(key + key_len * num_after, 0, key_len);
     // 2. 删除该位置的rid
     int rid_len = sizeof(Rid);
     Rid *rid = get_rid(pos);
@@ -396,11 +396,12 @@ IxNodeHandle *IxIndexHandle::split(IxNodeHandle *node) {
         new_node->page_hdr->next_leaf = node->page_hdr->next_leaf;
         node->page_hdr->next_leaf = new_node->get_page_no();
 
-        auto *next_node = fetch_node(new_node->page_hdr->next_leaf);
+        IxNodeHandle*next_node = fetch_node(new_node->page_hdr->next_leaf);
         next_node->page_hdr->prev_leaf = new_node->get_page_no();
         bpm_->unpin_page(next_node->get_page_id(), true);
+        delete next_node;
     } else {
-        for (int i = 0; i < num; ++i)  // renew child-nodes' father-node
+        for (int i = 0; i < num; ++i)
             maintain_child(new_node, i);
     }
     // 3. 如果新的右兄弟结点不是叶子结点，更新该结点的所有f孩子结点的父节点信息(使用IxIndexHandle::maintain_child())
@@ -696,13 +697,31 @@ Rid IxIndexHandle::get_rid(const Iid &iid) const {
  * @param key
  * @return Iid
  * @note 上层传入的key本来是int类型，通过(const char *)&key进行了转换
+ * @bug 多列索引(a,b)：中间节点存了两个key：1x和2y，传入where a>=2，
+ * 此时找叶子，应该返回1x对应的叶子（因为无法确定1x的叶子后面是否有2a、2x等key
+ * 但如果1x中没有2开头，以我们的lowerbound，keyindex会等于node1的size，
+ * 进而在ixscan的时候 assert 失败
  * 可用*(int *)key转换回去
  */
 Iid IxIndexHandle::lower_bound(const char *key, int used_num) {
-    auto node = find_leaf_page(key, used_num, nullptr).first;
+    auto node = find_leaf_page(key, Operation::FIND, nullptr).first;
     int key_idx = node->lower_bound(key);
 
-    Iid iid = {.page_no = node->get_page_no(), .slot_no = key_idx};
+    Iid iid;
+    if (key_idx == node->get_size()) {
+        if (node->get_page_no() != file_hdr_->last_leaf_) {
+            // go to next leaf
+            iid.page_no = node->get_next_leaf();
+            iid.slot_no = 0;
+        } else {
+            iid = leaf_end();
+            // 这种情况无法根据iid找到rid，即后续无法调用ih->get_rid(iid)
+        }
+    } else {
+        iid = {.page_no = node->get_page_no(), .slot_no = key_idx};
+    }
+
+    // unpin leaf node
     bpm_->unpin_page(node->get_page_id(), false);
     return iid;
 }
@@ -711,22 +730,32 @@ Iid IxIndexHandle::lower_bound(const char *key, int used_num) {
  * @brief FindLeafPage + upper_bound
  *
  * @param key
+ * @param used_num
+ * @param is_upper 是否修改的是右界,右界在find leaf时不使用usednum
  * @return Iid
  */
-Iid IxIndexHandle::upper_bound(const char *key, int used_num) {
-    auto node = find_leaf_page(key, used_num, nullptr).first;
+Iid IxIndexHandle::upper_bound(const char *key, int used_num, bool is_upper) {
+    IxNodeHandle *node;
+    node = find_leaf_page(key, used_num, nullptr).first;
     int key_idx = node->upper_bound_leaf(key, used_num);
 
     Iid iid;
     if (key_idx == node->get_size()) {
-        // 这种情况无法根据iid找到rid，即后续无法调用ih->get_rid(iid)
-        iid = leaf_end();
+        if (node->get_page_no() != file_hdr_->last_leaf_) {
+            // go to next leaf
+            iid.page_no = node->get_next_leaf();
+            iid.slot_no = 0;
+        } else {
+            iid = leaf_end();
+            // 这种情况无法根据iid找到rid，即后续无法调用ih->get_rid(iid)
+        }
     } else {
         iid = {.page_no = node->get_page_no(), .slot_no = key_idx};
     }
 
     // unpin leaf node
     bpm_->unpin_page(node->get_page_id(), false);
+    delete node;
     return iid;
 }
 /**

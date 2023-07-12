@@ -131,13 +131,14 @@ class IndexScanExecutor : public AbstractExecutor {
             int used_index_num = (int)used_col_names_set.size();
             if (cond.op == OP_EQ) {
                 lower = ih->lower_bound(key, used_index_num);
-                upper = ih->upper_bound(key, used_index_num);
+                upper = ih->upper_bound(key, used_index_num,true);
             } else if (cond.op == OP_GE) {
                 lower = ih->lower_bound(key, used_index_num);
             } else if (cond.op == OP_LE) {
-                upper = ih->upper_bound(key, used_index_num);
+                // find leaf 不使用num，在叶子节点二分才用num
+                upper = ih->upper_bound(key, used_index_num,true);
             } else if (cond.op == OP_GT) {
-                lower = ih->upper_bound(key, used_index_num);
+                lower = ih->upper_bound(key, used_index_num,false);
             } else if (cond.op == OP_LT) {
                 upper = ih->lower_bound(key, used_index_num);
             }
