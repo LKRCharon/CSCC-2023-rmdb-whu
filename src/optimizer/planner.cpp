@@ -53,7 +53,12 @@ bool Planner::get_index_cols(std::string tab_name, std::vector<Condition> curr_c
                 if (neq_num != 0) {
                     index_meta = index;
                     // return true;
-                    return (neq_num + eq_num == index_conds_count);
+                    if (neq_num + eq_num == index_conds_count) {
+                        return true;
+                    } else {
+                        break;
+                    }
+                    // return (neq_num + eq_num == index_conds_count);
                 }
                 break;
             }
@@ -72,7 +77,7 @@ bool Planner::get_index_cols(std::string tab_name, std::vector<Condition> curr_c
                         return true;
                     }
                 } else {
-                    return false;
+                    break;
                 }
             } else {
                 neq_num++;

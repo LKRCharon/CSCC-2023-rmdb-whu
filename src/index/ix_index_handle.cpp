@@ -202,9 +202,6 @@ int IxNodeHandle::insert(const char *key, const Rid &value) {
     int cmp_res = ix_compare(get_key(key_index), key, file_hdr->col_types_, file_hdr->col_lens_);
 
     // 2. 如果key重复则不插入
-    if (cmp_res == 0) {
-        return get_size();
-    }
     // 3. 如果key不重复则插入键值对
     if (key_index == get_size() || cmp_res > 0) {
         // 没必要多一步函数调用

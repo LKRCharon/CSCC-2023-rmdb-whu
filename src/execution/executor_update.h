@@ -43,18 +43,9 @@ class UpdateExecutor : public AbstractExecutor {
         // Update each rid from record file and index file
         for (auto &rid : rids_) {
             auto rec = fh_->get_record(rid, context_);
-            for (size_t i = 0; i < tab_.indexes.size(); ++i) {
-                auto &index = tab_.indexes.at(i);
-                auto ih =
-                    sm_manager_->ihs_.at(sm_manager_->get_ix_manager()->get_index_name(tab_name_, index.cols)).get();
-                char *key = new char[index.col_total_len];
-                int offset = 0;
-                for (int j = 0; j < index.col_num; j++) {
-                    memcpy(key + offset, rec->data + index.cols[j].offset, index.cols[j].len);
-                    offset += index.cols[j].len;
-                }
-                ih->delete_entry(key, context_->txn_);
-            }
+            // old data 保存原有data数据 防止update 失败
+            char *old_data = new char[rec->size];
+            memcpy(old_data,rec->data,rec->size);
 
             // 按照setclause修改rec的数据
             for (auto &set_clause : set_clauses_) {
@@ -69,7 +60,29 @@ class UpdateExecutor : public AbstractExecutor {
                 val.init_raw(lhs_col->len);
                 memcpy(rec->data + lhs_col->offset, val.raw->data, lhs_col->len);
             }
-
+            for (size_t i = 0; i < tab_.indexes.size(); ++i) {
+                auto &index = tab_.indexes.at(i);
+                auto ih =
+                    sm_manager_->ihs_.at(sm_manager_->get_ix_manager()->get_index_name(tab_name_, index.cols)).get();
+                int offset = 0;
+                char *new_key = new char[index.col_total_len];
+                char *old_key = new char[index.col_total_len];
+                for (int j = 0; j < index.col_num; j++) {
+                    memcpy(new_key + offset, rec->data + index.cols[j].offset, index.cols[j].len);
+                    memcpy(old_key + offset, old_data + index.cols[j].offset, index.cols[j].len);
+                    offset += index.cols[j].len;
+                }
+                // ih->delete_entry(old_key, context_->txn_);
+                std::vector<Rid> old_rids;
+                if(memcmp(new_key,old_key,index.col_total_len)==0){
+                    // 索引涉及的列s ，前后key完全一致，不用判断是否有重复索引
+                    break;
+                }
+                if(ih->get_value(new_key,&old_rids,context_->txn_)){
+                    // 要update的index已存在
+                    throw IndexEntryRepeatError();
+                }
+            }
             // Update record in record file
             fh_->update_record(rid, rec->data, context_);
 
@@ -77,15 +90,19 @@ class UpdateExecutor : public AbstractExecutor {
                 auto &index = tab_.indexes.at(i);
                 auto ih =
                     sm_manager_->ihs_.at(sm_manager_->get_ix_manager()->get_index_name(tab_name_, index.cols)).get();
-                char *key = new char[index.col_total_len];
+                char *insert_key = new char[index.col_total_len];
+                char *delete_key = new char[index.col_total_len];
                 int offset = 0;
                 for (int j = 0; j < index.col_num; j++) {
-                    memcpy(key + offset, rec->data + index.cols[j].offset, index.cols[j].len);
+                    memcpy(insert_key + offset, rec->data + index.cols[j].offset, index.cols[j].len);
+                    memcpy(delete_key + offset, old_data + index.cols[j].offset, index.cols[j].len);
                     offset += index.cols[j].len;
                 }
-                bool is_insert = ih->insert_entry(key, rid, context_->txn_);
+                ih->delete_entry(delete_key,context_->txn_);
+                bool is_insert = ih->insert_entry(insert_key, rid, context_->txn_);
                 if (!is_insert) {
-                    fh_->delete_record(rid, context_);
+                    // fh_->delete_record(rid, context_);
+                    // 这里应该走不到
                     throw IndexEntryRepeatError();
                 }
             }

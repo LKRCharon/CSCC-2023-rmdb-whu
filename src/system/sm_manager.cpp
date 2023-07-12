@@ -242,12 +242,14 @@ void SmManager::drop_table(const std::string& tab_name, Context* context) {
         rm_manager_->close_file(file_handle_iter->second.get());
         fhs_.erase(tab_name);
     }
-    TabMeta tab = db_.get_table(tab_name);
+    TabMeta& tab = db_.get_table(tab_name);
     for (auto& index : tab.indexes) {
-        drop_index(tab_name, index.cols,context);
+        drop_index(tab_name, index.cols, context);
     }
     rm_manager_->destroy_file(tab_name);
     db_.tabs_.erase(tab_name);
+
+    flush_meta();
 }
 
 /**
@@ -295,6 +297,8 @@ void SmManager::create_index(const std::string& tab_name, const std::vector<std:
     assert(ihs_.count(index_name) == 0);
     // ix_manager_->close_index(index_handle.get());
     ihs_.emplace(index_name, std::move(index_handle));
+
+    flush_meta();
 }
 
 /**
@@ -315,10 +319,12 @@ void SmManager::drop_index(const std::string& tab_name, const std::vector<std::s
     ix_manager_->destroy_index(tab_name, index_meta_iter->cols, index_handle->get_fd());
     ihs_.erase(index_name);
     tab_meta.indexes.erase(index_meta_iter);
+
+    flush_meta();
 }
 
 /**
- * @description: 删除索引
+ * @description: 删除索引 drop table 时调用
  * @param {string&} tab_name 表名称
  * @param {vector<ColMeta>&} 索引包含的字段元数据
  * @param {Context*} context
