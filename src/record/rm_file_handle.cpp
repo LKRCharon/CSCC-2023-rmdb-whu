@@ -22,6 +22,8 @@ std::unique_ptr<RmRecord> RmFileHandle::get_record(const Rid& rid, Context* cont
     auto page_handle = fetch_page_handle(rid.page_no);
     auto record_size = page_handle.file_hdr->record_size;
     auto record = std::make_unique<RmRecord>(record_size, page_handle.get_slot(rid.slot_no));
+    // 数据已经copy到record里了，unpin
+    bpm_->unpin_page(page_handle.page->get_page_id(), false);
     return record;
 }
 
@@ -47,6 +49,7 @@ Rid RmFileHandle::insert_record(char* buf, Context* context) {
     if (page_handle.page_hdr->num_records == page_handle.file_hdr->num_records_per_page) {
         file_hdr_.first_free_page_no = page_handle.page_hdr->next_free_page_no;
     }
+    bpm_->unpin_page(page_handle.page->get_page_id(), true);
     return Rid{page_handle.page->get_page_id().page_no, slot_no};
 }
 
@@ -83,6 +86,7 @@ void RmFileHandle::delete_record(const Rid& rid, Context* context) {
     if (page_handle.page_hdr->num_records == page_handle.file_hdr->num_records_per_page - 1) {
         release_page_handle(page_handle);
     }
+    bpm_->unpin_page(page_handle.page->get_page_id(), true);
 }
 
 /**
@@ -94,11 +98,14 @@ void RmFileHandle::delete_record(const Rid& rid, Context* context) {
 void RmFileHandle::update_record(const Rid& rid, char* buf, Context* context) {
     // 1. 获取指定记录所在的page handle
     auto page_handle = fetch_page_handle(rid.page_no);
-    // if (rid.page_no == 5 && rid.slot_no == 17) {
-    // }
+    if (!Bitmap::is_set(page_handle.bitmap, rid.slot_no)) {
+        throw RecordNotFoundError(rid.page_no, rid.slot_no);
+    }
+
     // 2. 更新记录
     auto slot = page_handle.get_slot(rid.slot_no);
     memcpy(slot, buf, page_handle.file_hdr->record_size);
+    bpm_->unpin_page(page_handle.page->get_page_id(), true);
 }
 
 /**
@@ -130,9 +137,8 @@ RmPageHandle RmFileHandle::create_new_page_handle() {
     page_hdr->next_free_page_no = -1;
     // 3.更新file_hdr_
     file_hdr_.num_pages++;
-    if (file_hdr_.first_free_page_no == -1) {
-        file_hdr_.first_free_page_no = page->get_page_id().page_no;
-    }
+    // 不需要判断有没有空闲页了，因为这个函数就是在没有空闲页时才被调用的
+    file_hdr_.first_free_page_no = page->get_page_id().page_no;
     return RmPageHandle(&file_hdr_, page);
 }
 
