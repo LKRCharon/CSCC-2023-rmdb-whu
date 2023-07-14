@@ -1,8 +1,9 @@
-/* A Bison parser, made by GNU Bison 3.0.4.  */
+/* A Bison parser, made by GNU Bison 3.5.1.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2020 Free Software Foundation,
+   Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -29,6 +30,9 @@
 
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
+
+/* Undocumented macros, especially those whose name start with YY_,
+   are private implementation details.  Do not rely on them.  */
 
 #ifndef YY_YY_YACC_TAB_HPP_INCLUDED
 # define YY_YY_YACC_TAB_HPP_INCLUDED
@@ -59,33 +63,34 @@ extern int yydebug;
     ASC = 269,
     ORDER = 270,
     BY = 271,
-    WHERE = 272,
-    UPDATE = 273,
-    SET = 274,
-    SELECT = 275,
-    INT = 276,
-    BIGINT = 277,
-    CHAR = 278,
-    FLOAT = 279,
-    DATETIME = 280,
-    INDEX = 281,
-    AND = 282,
-    JOIN = 283,
-    EXIT = 284,
-    HELP = 285,
-    TXN_BEGIN = 286,
-    TXN_COMMIT = 287,
-    TXN_ABORT = 288,
-    TXN_ROLLBACK = 289,
-    ORDER_BY = 290,
-    LEQ = 291,
-    NEQ = 292,
-    GEQ = 293,
-    T_EOF = 294,
-    IDENTIFIER = 295,
-    VALUE_STRING = 296,
-    VALUE_INT = 297,
-    VALUE_FLOAT = 298
+    LIMIT = 272,
+    WHERE = 273,
+    UPDATE = 274,
+    SET = 275,
+    SELECT = 276,
+    INT = 277,
+    BIGINT = 278,
+    CHAR = 279,
+    FLOAT = 280,
+    DATETIME = 281,
+    INDEX = 282,
+    AND = 283,
+    JOIN = 284,
+    EXIT = 285,
+    HELP = 286,
+    TXN_BEGIN = 287,
+    TXN_COMMIT = 288,
+    TXN_ABORT = 289,
+    TXN_ROLLBACK = 290,
+    ORDER_BY = 291,
+    LEQ = 292,
+    NEQ = 293,
+    GEQ = 294,
+    T_EOF = 295,
+    IDENTIFIER = 296,
+    VALUE_STRING = 297,
+    VALUE_INT = 298,
+    VALUE_FLOAT = 299
   };
 #endif
 

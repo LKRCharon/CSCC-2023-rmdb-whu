@@ -342,11 +342,18 @@ std::shared_ptr<Plan> Planner::generate_sort_plan(std::shared_ptr<Query> query, 
         const auto &sel_tab_cols = sm_manager_->db_.get_table(sel_tab_name).cols;
         all_cols.insert(all_cols.end(), sel_tab_cols.begin(), sel_tab_cols.end());
     }
-    TabCol sel_col;
-    for (auto &col : all_cols) {
-        if (col.name.compare(x->order->cols->col_name) == 0) sel_col = {.tab_name = col.tab_name, .col_name = col.name};
+    std::vector<TabCol> sel_col;
+    std::vector<bool> orderDir;
+
+    for(auto ordercol: x->order){
+            for (auto &col : all_cols) {
+            if(col.name.compare(ordercol->cols->col_name) == 0 )
+            sel_col.push_back({.tab_name = col.tab_name, .col_name = col.name});
+        }
+        orderDir.push_back(ordercol->orderby_dir==ast::OrderBy_DESC);
     }
-    return std::make_shared<SortPlan>(T_Sort, std::move(plan), sel_col, x->order->orderby_dir == ast::OrderBy_DESC);
+    
+    return std::make_shared<SortPlan>(T_Sort, std::move(plan), sel_col,orderDir,x->limit);
 }
 
 /**

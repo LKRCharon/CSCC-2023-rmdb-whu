@@ -15,6 +15,7 @@ See the Mulan PSL v2 for more details. */
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "common/logger.h"
 #include "defs.h"
 #include "parser/ast.h"
@@ -96,16 +97,19 @@ class ProjectionPlan : public Plan {
 
 class SortPlan : public Plan {
    public:
-    SortPlan(PlanTag tag, std::shared_ptr<Plan> subplan, TabCol sel_col, bool is_desc) {
+    SortPlan(PlanTag tag, std::shared_ptr<Plan> subplan, std::vector<TabCol> sel_col, std::vector<bool> is_desc,
+             int limit) {
         Plan::tag = tag;
         subplan_ = std::move(subplan);
         sel_col_ = sel_col;
         is_desc_ = is_desc;
+        limit_ = limit;
     }
     ~SortPlan() {}
     std::shared_ptr<Plan> subplan_;
-    TabCol sel_col_;
-    bool is_desc_;
+    std::vector<TabCol> sel_col_;
+    std::vector<bool> is_desc_;
+    int limit_;
 };
 
 // dml语句，包括insert; delete; update; select语句　

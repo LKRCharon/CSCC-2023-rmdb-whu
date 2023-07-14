@@ -21,7 +21,7 @@ using namespace ast;
 %define parse.error verbose
 
 // keywords
-%token SHOW TABLES CREATE TABLE DROP DESC INSERT INTO VALUES DELETE FROM ASC ORDER BY
+%token SHOW TABLES CREATE TABLE DROP DESC INSERT INTO VALUES DELETE FROM ASC ORDER BY LIMIT
 WHERE UPDATE SET SELECT INT BIGINT CHAR FLOAT DATETIME INDEX AND JOIN EXIT HELP TXN_BEGIN TXN_COMMIT TXN_ABORT TXN_ROLLBACK ORDER_BY
 // non-keywords
 %token LEQ NEQ GEQ T_EOF
@@ -50,6 +50,7 @@ WHERE UPDATE SET SELECT INT BIGINT CHAR FLOAT DATETIME INDEX AND JOIN EXIT HELP 
 %type <sv_conds> whereClause optWhereClause
 %type <sv_orderby>  order_clause opt_order_clause
 %type <sv_orderby_dir> opt_asc_desc
+%type <sv_limit> optLimitClause
 
 %%
 start:
@@ -148,9 +149,9 @@ dml:
     {
         $$ = std::make_shared<UpdateStmt>($2, $4, $5);
     }
-    |   SELECT selector FROM tableList optWhereClause opt_order_clause
+    |   SELECT selector FROM tableList optWhereClause opt_order_clause optLimitClause 
     {
-        $$ = std::make_shared<SelectStmt>($2, $4, $5, $6);
+        $$ = std::make_shared<SelectStmt>($2, $4, $5, $6,$7);
     }
     ;
 
@@ -371,15 +372,29 @@ opt_order_clause:
 order_clause:
       col  opt_asc_desc 
     { 
-        $$ = std::make_shared<OrderBy>($1, $2);
+          $$ = std::vector<std::shared_ptr<OrderBy>>();
+          $$.push_back(std::make_shared<ast::OrderBy>($1,$2));
     }
-    ;   
+    |   order_clause ',' col opt_asc_desc
+    {
+        $$.push_back(std::make_shared<ast::OrderBy>($3,$4));
+    }
+    ;
 
 opt_asc_desc:
     ASC          { $$ = OrderBy_ASC;     }
     |  DESC      { $$ = OrderBy_DESC;    }
     |       { $$ = OrderBy_DEFAULT; }
-    ;    
+    ;   
+optLimitClause:
+    LIMIT VALUE_INT
+    {
+        $$=$2;
+    }
+    |
+    {
+        $$ = 0;
+    }
 
 tbName: IDENTIFIER;
 

@@ -200,12 +200,17 @@ struct SelectStmt : public TreeNode {
     std::vector<std::shared_ptr<JoinExpr>> jointree;
 
     bool has_sort;
-    std::shared_ptr<OrderBy> order;
-
+    std::vector<std::shared_ptr<OrderBy>> order;
+    int limit;
     SelectStmt(std::vector<std::shared_ptr<Col>> cols_, std::vector<std::string> tabs_,
-               std::vector<std::shared_ptr<BinaryExpr>> conds_, std::shared_ptr<OrderBy> order_)
-        : cols(std::move(cols_)), tabs(std::move(tabs_)), conds(std::move(conds_)), order(std::move(order_)) {
-        has_sort = (bool)order;
+               std::vector<std::shared_ptr<BinaryExpr>> conds_, std::vector<std::shared_ptr<OrderBy>> order_,
+               int limit_)
+        : cols(std::move(cols_)),
+          tabs(std::move(tabs_)),
+          conds(std::move(conds_)),
+          order(std::move(order_)),
+          limit(std::move(limit_)) {
+        has_sort = order.size() > 0;
     }
 };
 
@@ -243,7 +248,9 @@ struct SemValue {
     std::shared_ptr<BinaryExpr> sv_cond;
     std::vector<std::shared_ptr<BinaryExpr>> sv_conds;
 
-    std::shared_ptr<OrderBy> sv_orderby;
+    std::vector<std::shared_ptr<OrderBy>> sv_orderby;
+
+    int sv_limit;
 };
 
 extern std::shared_ptr<ast::TreeNode> parse_tree;
