@@ -43,6 +43,7 @@ class InsertExecutor : public AbstractExecutor {
     std::unique_ptr<RmRecord> Next() override {
         // Make record buffer
         RmRecord rec(fh_->get_file_hdr().record_size);
+        // 准备好要写入的data
         for (size_t i = 0; i < values_.size(); i++) {
             auto &col = tab_.cols[i];
             auto &val = values_[i];
@@ -79,6 +80,9 @@ class InsertExecutor : public AbstractExecutor {
                 throw IndexEntryRepeatError();
             }
         }
+        //context中记录insert语句,放在索引之后，如果repeat了就不会记录
+        WriteRecord *write_rec = new WriteRecord(WType::INSERT_TUPLE,tab_name_,rid_);
+        context_->txn_->append_write_record(write_rec);
 
         return nullptr;
     }

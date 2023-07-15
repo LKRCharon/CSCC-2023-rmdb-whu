@@ -84,7 +84,8 @@ void TransactionManager::abort(Transaction* txn, LogManager* log_manager) {
             default:
                 break;
         }
-        // 别忘了pop
+        // pop 之前先delete
+        delete write_rec;
         write_set->pop_back();
     }
     delete context;

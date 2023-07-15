@@ -1,5 +1,4 @@
 #line 2 "lex.yy.cpp"
-#line 2 "lex.yy.cpp"
 
 #line 4 "lex.yy.cpp"
 
@@ -640,7 +639,7 @@ char *yytext;
 
 #line 641 "lex.yy.cpp"
 
-#line 639 "/home/charon/rmdb/src/parser/lex.yy.cpp"
+#line 643 "lex.yy.cpp"
 
 #define INITIAL 0
 #define STATE_COMMENT 1

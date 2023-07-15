@@ -1,1 +1,1 @@
-/home/seinfeld/db2023-whu/rmdb_client/build/rmdb_client
+./rmdb_client/build/rmdb_client

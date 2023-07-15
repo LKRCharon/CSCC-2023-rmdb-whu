@@ -359,17 +359,70 @@ void SmManager::show_index(const std::string& tab_name, Context* context) {
     outfile.close();
 }
 
-void SmManager::rollback_insert(const std::string &tab_name, const Rid &rid, Context *context){
+void SmManager::rollback_insert(const std::string& tab_name, const Rid& rid, Context* context) {
     auto rec = fhs_.at(tab_name)->get_record(rid, context);
+    TabMeta& tab = db_.get_table(tab_name);
     // TODO：考虑删索引
+    // insert entry
 
+    for (size_t i = 0; i < tab.indexes.size(); ++i) {
+        auto& index = tab.indexes.at(i);
+        auto ih = ihs_.at(get_ix_manager()->get_index_name(tab_name, index.cols)).get();
+        char* key = new char[index.col_total_len];
+        int offset = 0;
+        for (int j = 0; j < index.col_num; j++) {
+            memcpy(key + offset, rec->data + index.cols[j].offset, index.cols[j].len);
+            offset += index.cols[j].len;
+        }
+        ih->delete_entry(key, context->txn_);
+        delete[] key;
+    }
     // 删记录
     fhs_.at(tab_name)->delete_record(rid, context);
 }
-void SmManager::rollback_delete(const std::string &tab_name, const RmRecord &record, Context *context){
+void SmManager::rollback_delete(const std::string& tab_name, const RmRecord& record, Context* context) {
     auto rid = fhs_.at(tab_name)->insert_record(record.data, context);
+    TabMeta& tab = db_.get_table(tab_name);
 
+    for (size_t i = 0; i < tab.indexes.size(); ++i) {
+        auto& index = tab.indexes.at(i);
+        auto ih = ihs_.at(get_ix_manager()->get_index_name(tab_name, index.cols)).get();
+        char* key = new char[index.col_total_len];
+        int offset = 0;
+        for (int j = 0; j < index.col_num; j++) {
+            memcpy(key + offset, record.data + index.cols[j].offset, index.cols[j].len);
+            offset += index.cols[j].len;
+        }
+        ih->insert_entry(key, rid, context->txn_);
+        delete[] key;
+    }
 }
-void SmManager::rollback_update(const std::string &tab_name, const Rid &rid, const RmRecord &record, Context *context){
+void SmManager::rollback_update(const std::string& tab_name, const Rid& rid, const RmRecord& record, Context* context) {
+    // 更新完的new rec，需要被回滚删掉,在反update记录之前拿
+    auto new_rec = fhs_.at(tab_name)->get_record(rid, context);
+
     fhs_.at(tab_name)->update_record(rid, record.data, context);
+    TabMeta& tab = db_.get_table(tab_name);
+    // 把索引再改回去
+    for (size_t i = 0; i < tab.indexes.size(); ++i) {
+        auto& index = tab.indexes.at(i);
+        auto ih = ihs_.at(get_ix_manager()->get_index_name(tab_name, index.cols)).get();
+        char* insert_key = new char[index.col_total_len];
+        char* delete_key = new char[index.col_total_len];
+        int offset = 0;
+        for (int j = 0; j < index.col_num; j++) {
+            memcpy(insert_key + offset, record.data + index.cols[j].offset, index.cols[j].len);
+            memcpy(delete_key + offset, new_rec->data + index.cols[j].offset, index.cols[j].len);
+            offset += index.cols[j].len;
+        }
+        ih->delete_entry(delete_key, context->txn_);
+        bool is_insert = ih->insert_entry(insert_key, rid, context->txn_);
+        if (!is_insert) {
+            // fh_->delete_record(rid, context_);
+            // 这里应该走不到
+            throw IndexEntryRepeatError();
+        }
+        delete[] insert_key;
+        delete[] delete_key;
+    }
 }

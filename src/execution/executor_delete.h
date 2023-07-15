@@ -51,9 +51,16 @@ class DeleteExecutor : public AbstractExecutor {
                     offset += index.cols[j].len;
                 }
                 ih->delete_entry(key, context_->txn_);
+                delete[] key;
             }
             fh_->delete_record(rid, context_);
 
+            // 记一下删了那些rec
+            RmRecord old_rec(rec->size);
+            memcpy(old_rec.data,rec->data,rec->size);
+
+            WriteRecord *write_rec = new WriteRecord(WType::DELETE_TUPLE,tab_name_,rid,old_rec);
+            context_->txn_->append_write_record(write_rec);
         }
         return nullptr;
     }
