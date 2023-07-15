@@ -358,3 +358,18 @@ void SmManager::show_index(const std::string& tab_name, Context* context) {
     printer.print_separator(context);
     outfile.close();
 }
+
+void SmManager::rollback_insert(const std::string &tab_name, const Rid &rid, Context *context){
+    auto rec = fhs_.at(tab_name)->get_record(rid, context);
+    // TODO：考虑删索引
+
+    // 删记录
+    fhs_.at(tab_name)->delete_record(rid, context);
+}
+void SmManager::rollback_delete(const std::string &tab_name, const RmRecord &record, Context *context){
+    auto rid = fhs_.at(tab_name)->insert_record(record.data, context);
+
+}
+void SmManager::rollback_update(const std::string &tab_name, const Rid &rid, const RmRecord &record, Context *context){
+    fhs_.at(tab_name)->update_record(rid, record.data, context);
+}

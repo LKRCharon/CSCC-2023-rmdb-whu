@@ -80,4 +80,65 @@ class SmManager {
     void show_index(const std::string& tab_name, Context* context);
 
     // void show_index(const std::string& tab_name);
+
+    // https://github.com/ruc-deke/rucbase-lab/blob/main/src/system/sm_manager.h
+    // Transaction rollback management
+    /**
+     * @brief rollback the insert operation
+     *
+     * @param tab_name the name of the table
+     * @param rid the rid of the record
+     * @param txn the transaction
+     */
+    void rollback_insert(const std::string &tab_name, const Rid &rid, Context *context);
+
+    /**
+     * @brief rollback the delete operation
+     *
+     * @param tab_name the name of the table
+     * @param rid the value of the deleted record
+     * @param txn the transaction
+     */
+    void rollback_delete(const std::string &tab_name, const RmRecord &record, Context *context);
+
+    /**
+     * @brief rollback the update operation
+     *
+     * @param tab_name the name of the table
+     * @param rid the rid of the record
+     * @param record record的旧值
+     * @param txn the transaction
+     */
+    void rollback_update(const std::string &tab_name, const Rid &rid, const RmRecord &record, Context *context);
+
+    /**
+     * @brief rollback the table drop operation
+     *
+     * @param tab_name the name of the deleted table
+     */
+    void rollback_drop_table(const std::string &tab_name, Context *context);
+
+    /**
+     * @brief rollback the table create operation
+     *
+     * @param tab_name the name of the created table
+     */
+    void rollback_create_table(const std::string &tab_name, Context *context);
+
+    /**
+     * @brief rollback the create index operation
+     *
+     * @param tab_name the name of the table
+     * @param col_name the name of the column on which index is created
+     */
+    void rollback_create_index(const std::string &tab_name, const std::string &col_name, Context *context);
+
+    /**
+     * @brief rollback the drop index operation
+     *
+     * @param tab_name the name of the table
+     * @param col_name the name of the column on which index is created
+     */
+    void rollback_drop_index(const std::string &tab_name, const std::string &col_name, Context *context);
+
 };
