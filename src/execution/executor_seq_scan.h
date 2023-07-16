@@ -45,6 +45,8 @@ class SeqScanExecutor : public AbstractExecutor {
         len_ = cols_.back().offset + cols_.back().len;
 
         context_ = context;
+        context_->lock_mgr_->lock_shared_on_table(context_->txn_,fh_->GetFd());
+
         std::map<CompOp, CompOp> swap_op = {
             {OP_EQ, OP_EQ}, {OP_NE, OP_NE}, {OP_LT, OP_GT}, {OP_GT, OP_LT}, {OP_LE, OP_GE}, {OP_GE, OP_LE},
         };
@@ -58,7 +60,7 @@ class SeqScanExecutor : public AbstractExecutor {
             }
         }
         fed_conds_ = conds_;
-        LOG_DEBUG("SeqScan Construction");
+        // LOG_DEBUG("SeqScan Construction");
     }
 
     std::string getType() override { return "SeqScan"; }

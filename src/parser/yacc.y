@@ -96,7 +96,7 @@ txnStmt:
     {
         $$ = std::make_shared<TxnAbort>();
     }
-    | TXN_ROLLBACK
+    |   TXN_ROLLBACK
     {
         $$ = std::make_shared<TxnRollback>();
     }
@@ -171,7 +171,7 @@ colNameList:
     {
         $$ = std::vector<std::string>{$1};
     }
-    | colNameList ',' colName
+    |   colNameList ',' colName
     {
         $$.push_back($3);
     }

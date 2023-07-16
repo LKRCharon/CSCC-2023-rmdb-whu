@@ -49,7 +49,11 @@ void TransactionManager::commit(Transaction* txn, LogManager* log_manager) {
         write_set->clear();
     }
     // 2. 释放所有锁
+    for (auto lock_id = txn->get_lock_set()->begin(); lock_id != txn->get_lock_set()->end(); lock_id++) {
+        lock_manager_->unlock(txn, *lock_id);
+    }
     // 3. 释放事务相关资源，eg.锁集
+    txn->get_lock_set()->clear();
     // 4. 把事务日志刷入磁盘中
 
     // 5. 更新事务状态
@@ -91,7 +95,11 @@ void TransactionManager::abort(Transaction* txn, LogManager* log_manager) {
     delete context;
 
     // 2. 释放所有锁
-    // 3. 清空事务相关资源，eg.锁集
+    for (auto lock_id = txn->get_lock_set()->begin(); lock_id != txn->get_lock_set()->end(); lock_id++) {
+        lock_manager_->unlock(txn, *lock_id);
+    }
+    // 3. 释放事务相关资源，eg.锁集
+    txn->get_lock_set()->clear();
     // 4. 把事务日志刷入磁盘中
     // 5. 更新事务状态
     txn->set_state(TransactionState::ABORTED);

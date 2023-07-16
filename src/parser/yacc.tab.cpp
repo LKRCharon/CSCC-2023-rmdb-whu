@@ -62,7 +62,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 1 "yacc.y" /* yacc.c:339  */
+#line 1 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:339  */
 
 #include "ast.h"
 #include "yacc.tab.h"
@@ -77,7 +77,7 @@ void yyerror(YYLTYPE *locp, const char* s) {
 
 using namespace ast;
 
-#line 81 "yacc.tab.cpp" /* yacc.c:339  */
+#line 81 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -96,9 +96,9 @@ using namespace ast;
 #endif
 
 /* In a future release of Bison, this section will be replaced
-   by #include "yacc.tab.hpp".  */
-#ifndef YY_YY_YACC_TAB_HPP_INCLUDED
-# define YY_YY_YACC_TAB_HPP_INCLUDED
+   by #include "yacc.tab.h".  */
+#ifndef YY_YY_HOME_CHARON_RMDB_SRC_PARSER_YACC_TAB_H_INCLUDED
+# define YY_YY_HOME_CHARON_RMDB_SRC_PARSER_YACC_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -177,11 +177,11 @@ struct YYLTYPE
 
 int yyparse (void);
 
-#endif /* !YY_YY_YACC_TAB_HPP_INCLUDED  */
+#endif /* !YY_YY_HOME_CHARON_RMDB_SRC_PARSER_YACC_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
-#line 185 "yacc.tab.cpp" /* yacc.c:358  */
+#line 185 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -1453,538 +1453,538 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 58 "yacc.y" /* yacc.c:1646  */
+#line 58 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         parse_tree = (yyvsp[-1].sv_node);
         YYACCEPT;
     }
-#line 1462 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1462 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 63 "yacc.y" /* yacc.c:1646  */
+#line 63 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         parse_tree = std::make_shared<Help>();
         YYACCEPT;
     }
-#line 1471 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1471 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 68 "yacc.y" /* yacc.c:1646  */
+#line 68 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         parse_tree = nullptr;
         YYACCEPT;
     }
-#line 1480 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1480 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 73 "yacc.y" /* yacc.c:1646  */
+#line 73 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         parse_tree = nullptr;
         YYACCEPT;
     }
-#line 1489 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1489 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 88 "yacc.y" /* yacc.c:1646  */
+#line 88 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<TxnBegin>();
     }
-#line 1497 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1497 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 92 "yacc.y" /* yacc.c:1646  */
+#line 92 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<TxnCommit>();
     }
-#line 1505 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1505 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 96 "yacc.y" /* yacc.c:1646  */
+#line 96 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<TxnAbort>();
     }
-#line 1513 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1513 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 100 "yacc.y" /* yacc.c:1646  */
+#line 100 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<TxnRollback>();
     }
-#line 1521 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1521 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 107 "yacc.y" /* yacc.c:1646  */
+#line 107 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<ShowTables>();
     }
-#line 1529 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1529 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 111 "yacc.y" /* yacc.c:1646  */
+#line 111 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<ShowIndex>((yyvsp[0].sv_str));
     }
-#line 1537 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1537 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 118 "yacc.y" /* yacc.c:1646  */
+#line 118 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<CreateTable>((yyvsp[-3].sv_str), (yyvsp[-1].sv_fields));
     }
-#line 1545 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1545 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 122 "yacc.y" /* yacc.c:1646  */
+#line 122 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<DropTable>((yyvsp[0].sv_str));
     }
-#line 1553 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1553 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 126 "yacc.y" /* yacc.c:1646  */
+#line 126 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<DescTable>((yyvsp[0].sv_str));
     }
-#line 1561 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1561 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 130 "yacc.y" /* yacc.c:1646  */
+#line 130 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<CreateIndex>((yyvsp[-3].sv_str), (yyvsp[-1].sv_strs));
     }
-#line 1569 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1569 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 134 "yacc.y" /* yacc.c:1646  */
+#line 134 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<DropIndex>((yyvsp[-3].sv_str), (yyvsp[-1].sv_strs));
     }
-#line 1577 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1577 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 141 "yacc.y" /* yacc.c:1646  */
+#line 141 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<InsertStmt>((yyvsp[-4].sv_str), (yyvsp[-1].sv_vals));
     }
-#line 1585 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1585 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 145 "yacc.y" /* yacc.c:1646  */
+#line 145 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<DeleteStmt>((yyvsp[-1].sv_str), (yyvsp[0].sv_conds));
     }
-#line 1593 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1593 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 149 "yacc.y" /* yacc.c:1646  */
+#line 149 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<UpdateStmt>((yyvsp[-3].sv_str), (yyvsp[-1].sv_set_clauses), (yyvsp[0].sv_conds));
     }
-#line 1601 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1601 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 153 "yacc.y" /* yacc.c:1646  */
+#line 153 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_node) = std::make_shared<SelectStmt>((yyvsp[-5].sv_cols), (yyvsp[-3].sv_strs), (yyvsp[-2].sv_conds), (yyvsp[-1].sv_orderby),(yyvsp[0].sv_limit));
     }
-#line 1609 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1609 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 160 "yacc.y" /* yacc.c:1646  */
+#line 160 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_fields) = std::vector<std::shared_ptr<Field>>{(yyvsp[0].sv_field)};
     }
-#line 1617 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1617 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 164 "yacc.y" /* yacc.c:1646  */
+#line 164 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_fields).push_back((yyvsp[0].sv_field));
     }
-#line 1625 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1625 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 171 "yacc.y" /* yacc.c:1646  */
+#line 171 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_strs) = std::vector<std::string>{(yyvsp[0].sv_str)};
     }
-#line 1633 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1633 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 175 "yacc.y" /* yacc.c:1646  */
+#line 175 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_strs).push_back((yyvsp[0].sv_str));
     }
-#line 1641 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1641 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 182 "yacc.y" /* yacc.c:1646  */
+#line 182 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_field) = std::make_shared<ColDef>((yyvsp[-1].sv_str), (yyvsp[0].sv_type_len));
     }
-#line 1649 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1649 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 189 "yacc.y" /* yacc.c:1646  */
+#line 189 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_type_len) = std::make_shared<TypeLen>(SV_TYPE_INT, sizeof(int));
     }
-#line 1657 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1657 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 193 "yacc.y" /* yacc.c:1646  */
+#line 193 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_type_len) = std::make_shared<TypeLen>(SV_TYPE_BIGINT, sizeof(long long));
     }
-#line 1665 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1665 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 197 "yacc.y" /* yacc.c:1646  */
+#line 197 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_type_len) = std::make_shared<TypeLen>(SV_TYPE_STRING, (yyvsp[-1].sv_int));
     }
-#line 1673 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1673 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 201 "yacc.y" /* yacc.c:1646  */
+#line 201 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_type_len) = std::make_shared<TypeLen>(SV_TYPE_FLOAT, sizeof(double));
     }
-#line 1681 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1681 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 205 "yacc.y" /* yacc.c:1646  */
+#line 205 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_type_len) = std::make_shared<TypeLen>(SV_TYPE_DATETIME, 8);
     }
-#line 1689 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1689 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 213 "yacc.y" /* yacc.c:1646  */
+#line 213 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_vals) = std::vector<std::shared_ptr<Value>>{(yyvsp[0].sv_val)};
     }
-#line 1697 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1697 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 217 "yacc.y" /* yacc.c:1646  */
+#line 217 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_vals).push_back((yyvsp[0].sv_val));
     }
-#line 1705 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1705 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 224 "yacc.y" /* yacc.c:1646  */
+#line 224 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_val) = std::make_shared<IntLit>((yyvsp[0].sv_int));
     }
-#line 1713 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1713 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 228 "yacc.y" /* yacc.c:1646  */
+#line 228 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_val) = std::make_shared<FloatLit>((yyvsp[0].sv_float));
     }
-#line 1721 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1721 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 232 "yacc.y" /* yacc.c:1646  */
+#line 232 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_val) = std::make_shared<StringLit>((yyvsp[0].sv_str));
     }
-#line 1729 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1729 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 239 "yacc.y" /* yacc.c:1646  */
+#line 239 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_cond) = std::make_shared<BinaryExpr>((yyvsp[-2].sv_col), (yyvsp[-1].sv_comp_op), (yyvsp[0].sv_expr));
     }
-#line 1737 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1737 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 245 "yacc.y" /* yacc.c:1646  */
+#line 245 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     { /* ignore*/ }
-#line 1743 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1743 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 247 "yacc.y" /* yacc.c:1646  */
+#line 247 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_conds) = (yyvsp[0].sv_conds);
     }
-#line 1751 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1751 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 254 "yacc.y" /* yacc.c:1646  */
+#line 254 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_conds) = std::vector<std::shared_ptr<BinaryExpr>>{(yyvsp[0].sv_cond)};
     }
-#line 1759 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1759 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 258 "yacc.y" /* yacc.c:1646  */
+#line 258 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_conds).push_back((yyvsp[0].sv_cond));
     }
-#line 1767 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1767 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 265 "yacc.y" /* yacc.c:1646  */
+#line 265 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_col) = std::make_shared<Col>((yyvsp[-2].sv_str), (yyvsp[0].sv_str));
     }
-#line 1775 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1775 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 269 "yacc.y" /* yacc.c:1646  */
+#line 269 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_col) = std::make_shared<Col>("", (yyvsp[0].sv_str));
     }
-#line 1783 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1783 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 276 "yacc.y" /* yacc.c:1646  */
+#line 276 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_cols) = std::vector<std::shared_ptr<Col>>{(yyvsp[0].sv_col)};
     }
-#line 1791 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1791 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 280 "yacc.y" /* yacc.c:1646  */
+#line 280 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_cols).push_back((yyvsp[0].sv_col));
     }
-#line 1799 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1799 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 287 "yacc.y" /* yacc.c:1646  */
+#line 287 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_comp_op) = SV_OP_EQ;
     }
-#line 1807 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1807 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 291 "yacc.y" /* yacc.c:1646  */
+#line 291 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_comp_op) = SV_OP_LT;
     }
-#line 1815 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1815 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 295 "yacc.y" /* yacc.c:1646  */
+#line 295 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_comp_op) = SV_OP_GT;
     }
-#line 1823 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1823 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 299 "yacc.y" /* yacc.c:1646  */
+#line 299 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_comp_op) = SV_OP_NE;
     }
-#line 1831 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1831 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 303 "yacc.y" /* yacc.c:1646  */
+#line 303 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_comp_op) = SV_OP_LE;
     }
-#line 1839 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1839 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 307 "yacc.y" /* yacc.c:1646  */
+#line 307 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_comp_op) = SV_OP_GE;
     }
-#line 1847 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1847 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 314 "yacc.y" /* yacc.c:1646  */
+#line 314 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_expr) = std::static_pointer_cast<Expr>((yyvsp[0].sv_val));
     }
-#line 1855 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1855 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 318 "yacc.y" /* yacc.c:1646  */
+#line 318 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_expr) = std::static_pointer_cast<Expr>((yyvsp[0].sv_col));
     }
-#line 1863 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1863 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 325 "yacc.y" /* yacc.c:1646  */
+#line 325 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_set_clauses) = std::vector<std::shared_ptr<SetClause>>{(yyvsp[0].sv_set_clause)};
     }
-#line 1871 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1871 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 329 "yacc.y" /* yacc.c:1646  */
+#line 329 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_set_clauses).push_back((yyvsp[0].sv_set_clause));
     }
-#line 1879 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1879 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 336 "yacc.y" /* yacc.c:1646  */
+#line 336 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_set_clause) = std::make_shared<SetClause>((yyvsp[-2].sv_str), (yyvsp[0].sv_val));
     }
-#line 1887 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1887 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 343 "yacc.y" /* yacc.c:1646  */
+#line 343 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_cols) = {};
     }
-#line 1895 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1895 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 351 "yacc.y" /* yacc.c:1646  */
+#line 351 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_strs) = std::vector<std::string>{(yyvsp[0].sv_str)};
     }
-#line 1903 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1903 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 355 "yacc.y" /* yacc.c:1646  */
+#line 355 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_strs).push_back((yyvsp[0].sv_str));
     }
-#line 1911 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1911 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 359 "yacc.y" /* yacc.c:1646  */
+#line 359 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_strs).push_back((yyvsp[0].sv_str));
     }
-#line 1919 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1919 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 366 "yacc.y" /* yacc.c:1646  */
+#line 366 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     { 
         (yyval.sv_orderby) = (yyvsp[0].sv_orderby); 
     }
-#line 1927 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1927 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 369 "yacc.y" /* yacc.c:1646  */
+#line 369 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     { /* ignore*/ }
-#line 1933 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1933 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 374 "yacc.y" /* yacc.c:1646  */
+#line 374 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     { 
           (yyval.sv_orderby) = std::vector<std::shared_ptr<OrderBy>>();
           (yyval.sv_orderby).push_back(std::make_shared<ast::OrderBy>((yyvsp[-1].sv_col),(yyvsp[0].sv_orderby_dir)));
     }
-#line 1942 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1942 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 379 "yacc.y" /* yacc.c:1646  */
+#line 379 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_orderby).push_back(std::make_shared<ast::OrderBy>((yyvsp[-1].sv_col),(yyvsp[0].sv_orderby_dir)));
     }
-#line 1950 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1950 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 385 "yacc.y" /* yacc.c:1646  */
+#line 385 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     { (yyval.sv_orderby_dir) = OrderBy_ASC;     }
-#line 1956 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1956 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 386 "yacc.y" /* yacc.c:1646  */
+#line 386 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     { (yyval.sv_orderby_dir) = OrderBy_DESC;    }
-#line 1962 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1962 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 387 "yacc.y" /* yacc.c:1646  */
+#line 387 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     { (yyval.sv_orderby_dir) = OrderBy_DEFAULT; }
-#line 1968 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1968 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 391 "yacc.y" /* yacc.c:1646  */
+#line 391 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_limit)=(yyvsp[0].sv_int);
     }
-#line 1976 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1976 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 395 "yacc.y" /* yacc.c:1646  */
+#line 395 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     {
         (yyval.sv_limit) = 0;
     }
-#line 1984 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1984 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;
 
 
-#line 1988 "yacc.tab.cpp" /* yacc.c:1646  */
+#line 1988 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2219,5 +2219,5 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 402 "yacc.y" /* yacc.c:1906  */
+#line 402 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1906  */
 

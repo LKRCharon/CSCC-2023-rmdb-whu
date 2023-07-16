@@ -37,9 +37,21 @@ class LockManager {
     /* 数据项上的加锁队列 */
     class LockRequestQueue {
     public:
-        std::list<LockRequest> request_queue_;  // 加锁队列
-        std::condition_variable cv_;            // 条件变量，用于唤醒正在等待加锁的申请，在no-wait策略下无需使用
-        GroupLockMode group_lock_mode_ = GroupLockMode::NON_LOCK;   // 加锁队列的锁模式
+        // locks on the data
+        std::list<LockRequest> request_queue_;      // 位于同一个数据对象上的锁的队列
+        // notify lock request
+        std::condition_variable cv_;                // 条件变量，用于唤醒request_queue_，用于唤醒正在等待加锁的申请，在no-wait策略下无需使用
+        // the group_lock_mode_ decides whether to grant a lock request or not
+        GroupLockMode group_lock_mode_ = GroupLockMode::NON_LOCK;   // 当前数据对象上加锁的组模式
+        // waiting bit: if there is a lock request which is not granted, the waiting -bit will be true
+        bool is_waiting_ = false;
+        // upgrading_flag: if there is a lock waiting for upgrading, other transactions that request for upgrading will be aborted
+        // (deadlock prevetion)
+        bool upgrading_ = false;                    // 当前队列中是否存在一个正在upgrade的锁
+        // the number of shared locks
+        int shared_lock_num_ = 0;
+        // the number of IX locks
+        int IX_lock_num_ = 0;
     };
 
 public:
