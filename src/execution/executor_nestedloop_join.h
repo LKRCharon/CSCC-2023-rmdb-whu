@@ -85,7 +85,7 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
     void nextTuple() override {
         assert(!is_end());
         while (!(outer_->isBbmEnd() && outer_->isBufferEnd())) {
-            while (!(inner_->isBbmEnd() && inner_->isBufferEnd()&&outer_->isBufferEnd())) {
+            while (!(inner_->isBbmEnd() && inner_->isBufferEnd() && outer_->isBufferEnd())) {
                 while (!outer_->isBufferEnd()) {
                     while (!inner_->isBufferEnd()) {
                         inner_->nextTuple();
@@ -121,7 +121,7 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
                     return;
                 }
             }
-            
+
             // where t2.id<t1.id and t1.id<2
             // t1.id先扫到1，t2直接bufferend，进到此处
             if (outer_->isBbmEnd()) {
@@ -129,6 +129,7 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
                 break;
             }
             outer_->bbmNext();
+            outer_->beginTuple();
             while (outer_->isBufferEnd()) {
                 if (outer_->isBbmEnd()) {
                     is_end_ = true;
