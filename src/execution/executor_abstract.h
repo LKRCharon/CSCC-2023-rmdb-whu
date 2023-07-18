@@ -20,6 +20,8 @@ class AbstractExecutor {
     Rid _abstract_rid;
 
     Context *context_;
+    
+    virtual RmFileHandle *GetFileHandle(){};
 
     virtual ~AbstractExecutor() = default;
 
@@ -29,7 +31,6 @@ class AbstractExecutor {
         std::vector<ColMeta> *_cols = nullptr;
         return *_cols;
     };
-
     virtual std::string getType() { return "AbstractExecutor"; };
 
     virtual void beginTuple(){};
@@ -47,6 +48,8 @@ class AbstractExecutor {
     virtual std::unique_ptr<RmRecord> Next() = 0;
 
     virtual ColMeta get_col_offset(const TabCol &target) { return ColMeta(); };
+
+    virtual const std::vector<Condition> get_conds(){};
 
     std::vector<ColMeta>::const_iterator get_col(const std::vector<ColMeta> &rec_cols, const TabCol &target) {
         auto pos = std::find_if(rec_cols.begin(), rec_cols.end(), [&](const ColMeta &col) {
@@ -84,4 +87,5 @@ class AbstractExecutor {
         }
         return rec_dict;
     }
+
 };

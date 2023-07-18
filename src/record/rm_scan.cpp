@@ -32,6 +32,7 @@ void RmScan::next() {
         auto page_handle = file_handle_->fetch_page_handle(rid_.page_no);
         rid_.slot_no = Bitmap::next_bit(true, page_handle.bitmap, max_n, rid_.slot_no);
         // 本页找到空slot
+        file_handle_->bpm_->unpin_page(page_handle.page->get_page_id(), false);
         if (rid_.slot_no < max_n) {
             return;
         }

@@ -12,9 +12,12 @@ See the Mulan PSL v2 for more details. */
 #include "execution_defs.h"
 #include "execution_manager.h"
 #include "executor_abstract.h"
+#include "executor_block_scan.h"
 #include "index/ix.h"
+#include "record/rm_file_handle.h"
 #include "system/sm.h"
 
+// 使用块嵌套优化
 class NestedLoopJoinExecutor : public AbstractExecutor {
    private:
     std::unique_ptr<AbstractExecutor> left_;   // 左儿子节点（需要join的表）
@@ -23,8 +26,12 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
     std::vector<ColMeta> cols_;                // join后获得的记录的字段
 
     std::vector<Condition> fed_conds_;  // join条件
-
     bool is_end_;
+
+    // 块嵌套
+    Page *pages_ = new Page[JOIN_BUFFER_SIZE];
+    std::unique_ptr<BlockScanner> inner_;
+    std::unique_ptr<BlockScanner> outer_;
 
    public:
     NestedLoopJoinExecutor(std::unique_ptr<AbstractExecutor> left, std::unique_ptr<AbstractExecutor> right,
@@ -41,51 +48,81 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
         cols_.insert(cols_.end(), right_cols.begin(), right_cols.end());
         is_end_ = false;
         fed_conds_ = std::move(conds);
+
+        // TODO
+
+        // FixMe：搞明白到底move还是传地址
+        outer_ = std::make_unique<BlockScanner>(std::move(right_), pages_, 1);
+        inner_ = std::make_unique<BlockScanner>(std::move(left_), pages_ + 1, JOIN_BUFFER_SIZE - 1);
     }
-    std::string getType() override { return "Join"; }
+
+    ~NestedLoopJoinExecutor() { delete[] pages_; }
+
+    std::string getType() override { return "NestedLoopJoin"; }
 
     size_t tupleLen() const override { return len_; }
 
     const std::vector<ColMeta> &cols() const override { return cols_; }
 
     void beginTuple() override {
-        left_->beginTuple();
-        if (left_->is_end()) {
+        // 如果有个空表，直接end
+        outer_->beginTuple();
+        if (outer_->isTableEnd()) {
             is_end_ = true;
             return;
         }
-        feed_right();
-        right_->beginTuple();
-        while (right_->is_end()) {
-            // lab3 task2 Todo
-            // 如果当前innerTable(右表或算子)扫描完了
-            // 你需要移动到outerTable(左表)下一个记录,然后把右表移动到第一个记录的位置
-            left_->nextTuple();
-            if (left_->is_end()) {
-                is_end_ = true;
-                break;
-            }
-            feed_right();
-            right_->beginTuple();
-            // lab3 task2 Todo end
+        feed_inner();
+        inner_->beginTuple();
+        while (inner_->isBufferEnd()) {
+            nextTuple();
         }
     }
 
     void nextTuple() override {
         assert(!is_end());
-        right_->nextTuple();
-        while (right_->is_end()) {
-            // lab3 task2 Todo
-            // 如果右节点扫描完了
-            // 你需要把左表移动到下一个记录并把右节点回退到第一个记录
-            left_->nextTuple();
-            if (left_->is_end()) {
-                is_end_ = true;
-                break;
+
+        inner_->nextTuple();
+        while (inner_->isBufferEnd() || outer_->isBufferEnd()) {
+            // 内表buffer结束
+            if (inner_->isBufferEnd()) {
+                if (!outer_->isBufferEnd()) {
+                    // 内表buffer扫完，外表扫下一个tuple
+                    outer_->nextTuple();
+                    if (outer_->isBufferEnd()) {
+                        continue;
+                    }
+                    feed_inner();
+                    inner_->beginTuple();
+                } else {
+                    if (!inner_->isTableEnd()) {
+                        // 内表没结束，刷新缓冲，外表回到第一个元组
+                        outer_->beginTuple();
+                        if (outer_->isBufferEnd()) {
+                            continue;
+                        }
+                        feed_inner();
+                        inner_->bbmNext();
+                        inner_->beginTuple();
+                    } else {
+                        if (outer_->isTableEnd()) {
+                            // 内外标都扫完，end
+                            is_end_ = true;
+                            return;
+                        } else {
+                            // 外表没扫完，buffer满了；内表扫完了
+                            outer_->bbmNext();
+                            outer_->beginTuple();
+                            if (outer_->isBufferEnd()) {
+                                continue;
+                            }
+                            feed_inner();
+                            // 内表从头开始，buffer从第一个开始读
+                            inner_->bbmNext();
+                            inner_->beginTuple();
+                        }
+                    }
+                }
             }
-            feed_right();
-            right_->beginTuple();
-            // lab3 task2 Todo end
         }
     }
 
@@ -103,8 +140,8 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
         // lab3 task2 Todo
         // 调用左右算子的Next()获取下一个记录进行拼接赋给返回的连接结果std::make_unique<RmRecord>record中
 
-        auto left_record = left_->Next();
-        auto right_record = right_->Next();
+        auto left_record = inner_->getTuple();
+        auto right_record = outer_->getTuple();
         auto right_start = record->data + left_record->size;
         memcpy(record->data, left_record->data, left_record->size);
         memcpy(right_start, right_record->data, right_record->size);
@@ -117,9 +154,9 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
      * @brief 修改conditons
      * @note left拿到新值后都要做
      */
-    void feed_right() {
-        auto left_dict = rec2dict(left_->cols(), left_->Next().get());
-        right_->feed(left_dict, fed_conds_);
+    void feed_inner() {
+        auto left_dict = rec2dict(outer_->cols(), outer_->getTuple().get());
+        inner_->feed(left_dict, fed_conds_);
     }
 
     Rid &rid() override { return _abstract_rid; }

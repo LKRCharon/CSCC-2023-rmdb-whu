@@ -87,7 +87,7 @@ Page* BufferPoolManager::fetch_page(PageId page_id) {
     disk_manager_->read_page(page_id.fd, page_id.page_no, page->data_, PAGE_SIZE);
     // 4.     固定目标页，更新pin_count_
     replacer_->pin(frame_id);
-    page->pin_count_ = 1;
+    page->pin_count_ ++;
     // 5.     返回目标页
     return page;
 }

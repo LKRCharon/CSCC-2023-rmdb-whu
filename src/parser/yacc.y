@@ -370,10 +370,10 @@ opt_order_clause:
     ;
 
 order_clause:
-      col  opt_asc_desc 
+        col  opt_asc_desc 
     { 
-          $$ = std::vector<std::shared_ptr<OrderBy>>();
-          $$.push_back(std::make_shared<ast::OrderBy>($1,$2));
+        $$ = std::vector<std::shared_ptr<OrderBy>>();
+        $$.push_back(std::make_shared<ast::OrderBy>($1,$2));
     }
     |   order_clause ',' col opt_asc_desc
     {

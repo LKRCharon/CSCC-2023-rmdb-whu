@@ -33,7 +33,7 @@ class SeqScanExecutor : public AbstractExecutor {
     SmManager *sm_manager_;
 
    public:
-    std::string GetTableName() { return tab_name_; }
+
 
     SeqScanExecutor(SmManager *sm_manager, std::string tab_name, std::vector<Condition> conds, Context *context) {
         sm_manager_ = sm_manager;
@@ -45,7 +45,7 @@ class SeqScanExecutor : public AbstractExecutor {
         len_ = cols_.back().offset + cols_.back().len;
 
         context_ = context;
-        context_->lock_mgr_->lock_shared_on_table(context_->txn_,fh_->GetFd());
+        context_->lock_mgr_->lock_shared_on_table(context_->txn_, fh_->GetFd());
 
         std::map<CompOp, CompOp> swap_op = {
             {OP_EQ, OP_EQ}, {OP_NE, OP_NE}, {OP_LT, OP_GT}, {OP_GT, OP_LT}, {OP_LE, OP_GE}, {OP_GE, OP_LE},
@@ -63,7 +63,12 @@ class SeqScanExecutor : public AbstractExecutor {
         // LOG_DEBUG("SeqScan Construction");
     }
 
+    std::string GetTableName() { return tab_name_; }
     std::string getType() override { return "SeqScan"; }
+    RmFileHandle *GetFileHandle() override { return fh_; }
+    const std::vector<Condition> get_conds() override{
+        return fed_conds_;
+    }
 
     /**
      * @brief 构建表迭代器scan_,并开始迭代扫描,直到扫描到第一个满足谓词条件的元组停止,并赋值给rid_
@@ -202,4 +207,5 @@ class SeqScanExecutor : public AbstractExecutor {
         return std::all_of(conds.begin(), conds.end(),
                            [&](const Condition &cond) { return eval_cond(rec_cols, cond, rec); });
     }
+
 };
