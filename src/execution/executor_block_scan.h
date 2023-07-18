@@ -169,7 +169,7 @@ class BlockScanner {
         return record;
     }
 
-    bool isTableEnd() { return is_buffer_end&&bbm_->isEnd(); }
+    bool isBbmEnd() { return bbm_->isEnd(); }
     bool isBufferEnd() { return is_buffer_end; }
 
     void feed(const std::map<TabCol, Value> &feed_dict, const std::vector<Condition> &fed_conds) {

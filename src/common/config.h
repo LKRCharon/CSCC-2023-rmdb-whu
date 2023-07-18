@@ -34,6 +34,7 @@ static constexpr int HEADER_PAGE_ID = 0;         // the header page id
 static constexpr int PAGE_SIZE = 4096;           // size of a data page in byte  4KB
 static constexpr int BUFFER_POOL_SIZE = 131072;  // size of buffer pool 512MB
 static constexpr int JOIN_BUFFER_SIZE = 8192;   // size of join buffer 32MB
+// static constexpr int JOIN_BUFFER_SIZE = 5;   // size of join buffer 32MB
 // static constexpr int BUFFER_POOL_SIZE = 262144;                                // size of buffer pool 1GB
 static constexpr int LOG_BUFFER_SIZE = (1024 * PAGE_SIZE);  // size of a log buffer in byte
 static constexpr int BUCKET_SIZE = 50;                      // size of extendible hash bucket

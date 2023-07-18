@@ -1935,8 +1935,8 @@ yyreduce:
   case 67:
 #line 374 "/home/charon/rmdb/src/parser/yacc.y" /* yacc.c:1646  */
     { 
-          (yyval.sv_orderby) = std::vector<std::shared_ptr<OrderBy>>();
-          (yyval.sv_orderby).push_back(std::make_shared<ast::OrderBy>((yyvsp[-1].sv_col),(yyvsp[0].sv_orderby_dir)));
+        (yyval.sv_orderby) = std::vector<std::shared_ptr<OrderBy>>();
+        (yyval.sv_orderby).push_back(std::make_shared<ast::OrderBy>((yyvsp[-1].sv_col),(yyvsp[0].sv_orderby_dir)));
     }
 #line 1942 "/home/charon/rmdb/src/parser/yacc.tab.cpp" /* yacc.c:1646  */
     break;

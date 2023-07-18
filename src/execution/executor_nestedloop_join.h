@@ -67,63 +67,84 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
     void beginTuple() override {
         // 如果有个空表，直接end
         outer_->beginTuple();
-        if (outer_->isTableEnd()) {
-            is_end_ = true;
-            return;
+        while (outer_->isBufferEnd()) {
+            if (outer_->isBbmEnd()) {
+                is_end_ = true;
+                return;
+            }
+            outer_->bbmNext();
+            outer_->beginTuple();
         }
         feed_inner();
         inner_->beginTuple();
-        while (inner_->isBufferEnd()) {
+        if (inner_->isBufferEnd()) {
             nextTuple();
         }
     }
 
     void nextTuple() override {
         assert(!is_end());
-
-        inner_->nextTuple();
-        while (inner_->isBufferEnd() || outer_->isBufferEnd()) {
-            // 内表buffer结束
-            if (inner_->isBufferEnd()) {
-                if (!outer_->isBufferEnd()) {
-                    // 内表buffer扫完，外表扫下一个tuple
-                    outer_->nextTuple();
-                    if (outer_->isBufferEnd()) {
-                        continue;
-                    }
-                    feed_inner();
-                    inner_->beginTuple();
-                } else {
-                    if (!inner_->isTableEnd()) {
-                        // 内表没结束，刷新缓冲，外表回到第一个元组
-                        outer_->beginTuple();
-                        if (outer_->isBufferEnd()) {
-                            continue;
-                        }
-                        feed_inner();
-                        inner_->bbmNext();
-                        inner_->beginTuple();
-                    } else {
-                        if (outer_->isTableEnd()) {
-                            // 内外标都扫完，end
-                            is_end_ = true;
+        while (!(outer_->isBbmEnd() && outer_->isBufferEnd())) {
+            while (!(inner_->isBbmEnd() && inner_->isBufferEnd()&&outer_->isBufferEnd())) {
+                while (!outer_->isBufferEnd()) {
+                    while (!inner_->isBufferEnd()) {
+                        inner_->nextTuple();
+                        if (!inner_->isBufferEnd()) {
                             return;
-                        } else {
-                            // 外表没扫完，buffer满了；内表扫完了
-                            outer_->bbmNext();
-                            outer_->beginTuple();
-                            if (outer_->isBufferEnd()) {
-                                continue;
-                            }
-                            feed_inner();
-                            // 内表从头开始，buffer从第一个开始读
-                            inner_->bbmNext();
-                            inner_->beginTuple();
+                        }
+                    }
+                    outer_->nextTuple();
+                    if (!outer_->isBufferEnd()) {
+                        feed_inner();
+                        inner_->beginTuple();
+                        if (!inner_->isBufferEnd()) {
+                            return;
                         }
                     }
                 }
+                if (inner_->isBbmEnd() && inner_->isBufferEnd()) {
+                    break;
+                }
+                outer_->beginTuple();
+                while (outer_->isBufferEnd()) {
+                    if (outer_->isBbmEnd()) {
+                        is_end_ = true;
+                        return;
+                    }
+                    outer_->bbmNext();
+                    outer_->beginTuple();
+                }
+                feed_inner();
+                inner_->bbmNext();
+                inner_->beginTuple();
+                if (!inner_->isBufferEnd()) {
+                    return;
+                }
+            }
+            
+            // where t2.id<t1.id and t1.id<2
+            // t1.id先扫到1，t2直接bufferend，进到此处
+            if (outer_->isBbmEnd()) {
+                is_end_ = true;
+                break;
+            }
+            outer_->bbmNext();
+            while (outer_->isBufferEnd()) {
+                if (outer_->isBbmEnd()) {
+                    is_end_ = true;
+                    return;
+                }
+                outer_->bbmNext();
+                outer_->beginTuple();
+            }
+            feed_inner();
+            inner_->bbmNext();
+            inner_->beginTuple();
+            if (!inner_->isBufferEnd()) {
+                return;
             }
         }
+        is_end_ = true;
     }
 
     bool is_end() const override { return is_end_; }
