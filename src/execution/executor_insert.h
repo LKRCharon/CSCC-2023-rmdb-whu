@@ -38,7 +38,7 @@ class InsertExecutor : public AbstractExecutor {
         }
         fh_ = sm_manager_->fhs_.at(tab_name).get();
         context_ = context;
-        context_->lock_mgr_->lock_exclusive_on_table(context_->txn_,fh_->GetFd());
+        context_->lock_mgr_->lock_IX_on_table(context_->txn_,fh_->GetFd());
     };
 
     std::unique_ptr<RmRecord> Next() override {

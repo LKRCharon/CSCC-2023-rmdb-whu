@@ -199,6 +199,7 @@ void SmManager::desc_table(const std::string& tab_name, Context* context) {
  * @param {Context*} context
  */
 void SmManager::create_table(const std::string& tab_name, const std::vector<ColDef>& col_defs, Context* context) {
+
     if (db_.is_table(tab_name)) {
         throw TableExistsError(tab_name);
     }
@@ -223,6 +224,7 @@ void SmManager::create_table(const std::string& tab_name, const std::vector<ColD
     // fhs_[tab_name] = rm_manager_->open_file(tab_name);
     fhs_.emplace(tab_name, rm_manager_->open_file(tab_name));
 
+    context->lock_mgr_->lock_exclusive_on_table(context->txn_, fhs_.at(tab_name)->GetFd());
     flush_meta();
 }
 
@@ -232,6 +234,8 @@ void SmManager::create_table(const std::string& tab_name, const std::vector<ColD
  * @param {Context*} context
  */
 void SmManager::drop_table(const std::string& tab_name, Context* context) {
+    context->lock_mgr_->lock_shared_on_table(context->txn_, fhs_.at(tab_name)->GetFd());
+
     if (!db_.is_table(tab_name)) {
         throw TableNotFoundError(tab_name);
     }
@@ -259,6 +263,8 @@ void SmManager::drop_table(const std::string& tab_name, Context* context) {
  * @param {Context*} context
  */
 void SmManager::create_index(const std::string& tab_name, const std::vector<std::string>& col_names, Context* context) {
+    context->lock_mgr_->lock_shared_on_table(context->txn_, fhs_.at(tab_name)->GetFd());
+
     TabMeta& tab_meta = db_.get_table(tab_name);
     if (tab_meta.is_index(col_names)) {
         throw IndexExistsError(tab_name, col_names);
@@ -308,6 +314,8 @@ void SmManager::create_index(const std::string& tab_name, const std::vector<std:
  * @param {Context*} context
  */
 void SmManager::drop_index(const std::string& tab_name, const std::vector<std::string>& col_names, Context* context) {
+    context->lock_mgr_->lock_shared_on_table(context->txn_, fhs_.at(tab_name)->GetFd());
+
     TabMeta& tab_meta = db_.get_table(tab_name);
     if (!tab_meta.is_index(col_names)) {
         throw IndexNotFoundError(tab_name, col_names);

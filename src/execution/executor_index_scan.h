@@ -43,7 +43,6 @@ class IndexScanExecutor : public AbstractExecutor {
                       Context *context) {
         sm_manager_ = sm_manager;
         context_ = context;
-        context_->lock_mgr_->lock_shared_on_table(context_->txn_,fh_->GetFd());
 
         tab_name_ = std::move(tab_name);
         tab_ = sm_manager_->db_.get_table(tab_name_);
@@ -74,6 +73,7 @@ class IndexScanExecutor : public AbstractExecutor {
             }
         }
         fed_conds_ = conds_;
+        context_->lock_mgr_->lock_shared_on_table(context_->txn_,fh_->GetFd());
     }
     IndexScanExecutor(SmManager *sm_manager, std::string tab_name, std::vector<Condition> conds,
                       std::vector<std::string> index_col_names, Context *context) {

@@ -17,9 +17,13 @@ See the Mulan PSL v2 for more details. */
  * @return {unique_ptr<RmRecord>} rid对应的记录对象指针
  */
 std::unique_ptr<RmRecord> RmFileHandle::get_record(const Rid& rid, Context* context) const {
+    // 0. txn, 加行级S锁
+    context->lock_mgr_->lock_shared_on_record(context->txn_, rid, fd_);
+
     // 1. 获取指定记录所在的page handle
-    // 2. 初始化一个指向RmRecord的指针（赋值其内部的data和size）
     auto page_handle = fetch_page_handle(rid.page_no);
+
+    // 2. 初始化一个指向RmRecord的指针（赋值其内部的data和size）
     auto record_size = page_handle.file_hdr->record_size;
     auto record = std::make_unique<RmRecord>(record_size, page_handle.get_slot(rid.slot_no));
     // 数据已经copy到record里了，unpin
@@ -36,11 +40,17 @@ std::unique_ptr<RmRecord> RmFileHandle::get_record(const Rid& rid, Context* cont
 Rid RmFileHandle::insert_record(char* buf, Context* context) {
     // 1. 获取当前未满的page handle
     auto page_handle = create_page_handle();
+
     // 2. 在page handle中找到空闲slot位置
-    // auto slot_no = Bitmap::first_bit(0, page_handle.bitmap, page_handle.file_hdr->bitmap_size);
     auto slot_no = Bitmap::first_bit(false, page_handle.bitmap, file_hdr_.num_records_per_page);
+
+    // 0. txn copy之前上写锁
+    auto rid = Rid{page_handle.page->get_page_id().page_no, slot_no};
+    context->lock_mgr_->lock_exclusive_on_record(context->txn_, rid, fd_);
+
     // 3. 将buf复制到空闲slot位置
     memcpy(page_handle.get_slot(slot_no), buf, page_handle.file_hdr->record_size);
+
     // 4. 更新page_handle.page_hdr中的数据结构
     Bitmap::set(page_handle.bitmap, slot_no);
     page_handle.page_hdr->num_records++;
@@ -49,8 +59,10 @@ Rid RmFileHandle::insert_record(char* buf, Context* context) {
     if (page_handle.page_hdr->num_records == page_handle.file_hdr->num_records_per_page) {
         file_hdr_.first_free_page_no = page_handle.page_hdr->next_free_page_no;
     }
+
     bpm_->unpin_page(page_handle.page->get_page_id(), true);
-    return Rid{page_handle.page->get_page_id().page_no, slot_no};
+
+    return rid;
 }
 
 /**
@@ -60,6 +72,7 @@ Rid RmFileHandle::insert_record(char* buf, Context* context) {
  */
 void RmFileHandle::insert_record(const Rid& rid, char* buf) {
     auto page_handle = fetch_page_handle(rid.page_no);
+
     auto slot = page_handle.get_slot(rid.slot_no);
     memcpy(slot, buf, file_hdr_.record_size);
     Bitmap::set(page_handle.bitmap, rid.slot_no);
@@ -75,6 +88,7 @@ void RmFileHandle::insert_record(const Rid& rid, char* buf) {
 void RmFileHandle::delete_record(const Rid& rid, Context* context) {
     // 1. 获取指定记录所在的page handle
     auto page_handle = fetch_page_handle(rid.page_no);
+    context->lock_mgr_->lock_exclusive_on_record(context->txn_, rid, fd_);
 
     // 2. 更新page_handle.page_hdr中的数据结构
     auto slot = page_handle.get_slot(rid.slot_no);
@@ -98,6 +112,8 @@ void RmFileHandle::delete_record(const Rid& rid, Context* context) {
 void RmFileHandle::update_record(const Rid& rid, char* buf, Context* context) {
     // 1. 获取指定记录所在的page handle
     auto page_handle = fetch_page_handle(rid.page_no);
+    context->lock_mgr_->lock_exclusive_on_record(context->txn_, rid, fd_);
+
     if (!Bitmap::is_set(page_handle.bitmap, rid.slot_no)) {
         throw RecordNotFoundError(rid.page_no, rid.slot_no);
     }

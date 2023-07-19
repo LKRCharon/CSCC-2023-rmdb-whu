@@ -25,45 +25,105 @@ with open("aadebugsql/txn1.sql", "w") as file:
     
     # 插10条 abort
     file.write('begin;\n');
-    for id in range(1,10):
+    for id in range(1,11):
         file.write(f"insert into d values({id},'name','2023-07-0{id} 18:42:00',2,{id/1.7:.6f});\n");
     file.write('abort;\n');
     # file.write('select * from d;\n');
     # file.write('select * from d where id>0;\n');
 
     file.write('begin;\n');
-    for id in range(1,10):
+    for id in range(1,11):
         file.write(f"insert into d values({id},'name','2023-07-0{id} 18:42:00',2,{id/1.7:.6f});\n");
     file.write('commit;\n');
     # file.write('select * from d;\n');
     # file.write('select * from d where id>0;\n');
 
     file.write('begin;\n');
-    for id in range(1,10):
+    for id in range(1,11):
         file.write(f"update d set time='2023-08-0{id} 18:42:00' where time='2023-07-0{id} 18:42:00';\n");
     file.write('abort;\n');
     file.write('select * from d;\n');
     file.write('select * from d where id>0;\n');
 
     file.write('begin;\n');
-    for id in range(1,10):
+    for id in range(1,11):
         file.write(f"update d set time='2023-08-0{id} 18:42:00' where time='2023-07-0{id} 18:42:00';\n");
     file.write('commit;\n');
     file.write('select * from d;\n');
     file.write('select * from d where id>0;\n');
 
     file.write('begin;\n');
-    for id in range(1,10):
+    for id in range(1,11):
         file.write(f"delete from d where time='2023-08-0{id} 18:42:00';\n");
     file.write('abort;\n');
     file.write('select * from d;\n');
     file.write('select * from d where id>0;\n');
 
     file.write('begin;\n');
-    for id in range(1,10):
+    for id in range(1,11):
         file.write(f"delete from d where time='2023-08-0{id} 18:42:00';\n");
     file.write('commit;\n');
     file.write('select * from d;\n');
     file.write('select * from d where id>0;\n');
 
+with open("aadebugsql/txn1.sql", "w") as file:
+    file.write('create table d (id int, name char(16),time datetime,test2 bigint,test3 float);\n');
+    file.write('create index d(time);\n');
+    file.write('create index d(id);\n');
     
+    # 插10条 abort
+    file.write('begin;\n');
+    for id in range(1,11):
+        file.write(f"insert into d values({id},'name','2023-07-0{id} 18:42:00',2,{id/1.7:.6f});\n");
+    file.write('abort;\n');
+    # file.write('select * from d;\n');
+    # file.write('select * from d where id>0;\n');
+
+    file.write('begin;\n');
+    for id in range(1,11):
+        file.write(f"insert into d values({id},'name','2023-07-0{id} 18:42:00',2,{id/1.7:.6f});\n");
+    file.write('commit;\n');
+    # file.write('select * from d;\n');
+    # file.write('select * from d where id>0;\n');
+
+    file.write('begin;\n');
+    for id in range(1,11):
+        file.write(f"update d set time='2023-08-0{id} 18:42:00' where time='2023-07-0{id} 18:42:00';\n");
+    file.write('abort;\n');
+    file.write('select * from d;\n');
+    file.write('select * from d where id>0;\n');
+
+    file.write('begin;\n');
+    for id in range(1,11):
+        file.write(f"update d set time='2023-08-0{id} 18:42:00' where time='2023-07-0{id} 18:42:00';\n");
+    file.write('commit;\n');
+    file.write('select * from d;\n');
+    file.write('select * from d where id>0;\n');
+
+    file.write('begin;\n');
+    for id in range(1,11):
+        file.write(f"delete from d where time='2023-08-0{id} 18:42:00';\n");
+    file.write('abort;\n');
+    file.write('select * from d;\n');
+    file.write('select * from d where id>0;\n');
+
+    file.write('begin;\n');
+    for id in range(1,11):
+        file.write(f"delete from d where time='2023-08-0{id} 18:42:00';\n");
+    file.write('commit;\n');
+    file.write('select * from d;\n');
+    file.write('select * from d where id>0;\n');
+
+with open("aadebugsql/txn2_abort.sql", "w") as file:
+    file.write('create table txn2 (id int,f float);\n');
+    for id in range(1,4):
+        file.write(f"insert into txn2 values({id},{id/1.7:.6f});\n");
+
+    file.write('begin;\n');
+    file.write('select * from txn2;\n');
+    file.write(f"insert into txn2 values(4,100.0);\n");
+    file.write('select * from txn2;\n');
+    file.write(f"delete from txn2 where id>2;\n");
+    file.write('select * from txn2;\n');
+    file.write('abort;\n');
+    file.write('select * from txn2;\n');

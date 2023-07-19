@@ -37,10 +37,11 @@ class UpdateExecutor : public AbstractExecutor {
         conds_ = conds;
         rids_ = rids;
         context_ = context;
-        context_->lock_mgr_->lock_exclusive_on_table(context_->txn_,fh_->GetFd());
+        context_->lock_mgr_->lock_IX_on_table(context_->txn_, fh_->GetFd());
     }
     // https://github.com/ruc-deke/rucbase-lab/blob/main/src/execution/executor_update.h
     std::unique_ptr<RmRecord> Next() override {
+        std::deque<WriteRecord *> dq4reverse;
 
         // Update each rid from record file and index file
         for (auto &rid : rids_) {
@@ -48,7 +49,7 @@ class UpdateExecutor : public AbstractExecutor {
             // old rec 保存原有data数据 防止update 失败
             RmRecord old_rec = RmRecord(rec->size);
             // char *old_data = new char[rec->size];
-            memcpy(old_rec.data,rec->data,rec->size);
+            memcpy(old_rec.data, rec->data, rec->size);
 
             // 按照setclause修改rec的数据
             for (auto &set_clause : set_clauses_) {
@@ -63,7 +64,7 @@ class UpdateExecutor : public AbstractExecutor {
                 val.init_raw(lhs_col->len);
                 memcpy(rec->data + lhs_col->offset, val.raw->data, lhs_col->len);
             }
-            
+
             // 判断新数据是否与原有索引重复
             for (size_t i = 0; i < tab_.indexes.size(); ++i) {
                 auto &index = tab_.indexes.at(i);
@@ -79,11 +80,11 @@ class UpdateExecutor : public AbstractExecutor {
                 }
                 // ih->delete_entry(old_key, context_->txn_);
                 std::vector<Rid> old_rids;
-                if(memcmp(new_key,old_key,index.col_total_len)==0){
+                if (memcmp(new_key, old_key, index.col_total_len) == 0) {
                     // 索引涉及的列s ，前后key完全一致，不用判断是否有重复索引
                     break;
                 }
-                if(ih->get_value(new_key,&old_rids,context_->txn_)){
+                if (ih->get_value(new_key, &old_rids, context_->txn_)) {
                     // 要update的index已存在
                     throw IndexEntryRepeatError();
                 }
@@ -107,7 +108,7 @@ class UpdateExecutor : public AbstractExecutor {
                     memcpy(delete_key + offset, old_rec.data + index.cols[j].offset, index.cols[j].len);
                     offset += index.cols[j].len;
                 }
-                ih->delete_entry(delete_key,context_->txn_);
+                ih->delete_entry(delete_key, context_->txn_);
                 bool is_insert = ih->insert_entry(insert_key, rid, context_->txn_);
                 if (!is_insert) {
                     // fh_->delete_record(rid, context_);
@@ -117,9 +118,10 @@ class UpdateExecutor : public AbstractExecutor {
                 delete[] insert_key;
                 delete[] delete_key;
             }
-            WriteRecord *write_rec = new WriteRecord(WType::UPDATE_TUPLE,tab_name_,rid,old_rec);
-            context_->txn_->append_write_record(write_rec);
+            WriteRecord *write_rec = new WriteRecord(WType::UPDATE_TUPLE, tab_name_, rid, old_rec);
+            dq4reverse.push_back(write_rec);
         }
+        context_->txn_->append_write_records_reverse(dq4reverse);
         return nullptr;
     }
 

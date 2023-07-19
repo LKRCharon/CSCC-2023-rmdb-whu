@@ -34,11 +34,12 @@ class DeleteExecutor : public AbstractExecutor {
         conds_ = conds;
         rids_ = rids;
         context_ = context;
-        context_->lock_mgr_->lock_exclusive_on_table(context_->txn_,fh_->GetFd());
+        context_->lock_mgr_->lock_IX_on_table(context_->txn_,fh_->GetFd());
     }
 
     std::unique_ptr<RmRecord> Next() override {
-
+        // 翻转记录删除操作的顺序
+        std::deque<WriteRecord*> dq4reverse;
         // Delete each rid from record file and index file
         for (auto &rid : rids_) {
             auto rec = fh_->get_record(rid, context_);
@@ -62,8 +63,9 @@ class DeleteExecutor : public AbstractExecutor {
             memcpy(old_rec.data,rec->data,rec->size);
 
             WriteRecord *write_rec = new WriteRecord(WType::DELETE_TUPLE,tab_name_,rid,old_rec);
-            context_->txn_->append_write_record(write_rec);
+            dq4reverse.push_back(write_rec);
         }
+        context_->txn_->append_write_records_reverse(dq4reverse);
         return nullptr;
     }
 
