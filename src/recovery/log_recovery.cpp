@@ -30,8 +30,8 @@ void RecoveryManager::analyze() {
         if (num_bytes < 0) {
             throw InternalError("read log file error!");
         }
-        // OFFSET_LOG_TOT_LEN+LOG_HEADER_SIZE   先判断read_buf里有无下一条log的长度信息
-        while (buffer_offset + OFFSET_LOG_TOT_LEN + LOG_HEADER_SIZE < num_bytes) {
+        // 先判断read_buf里有无下一条log的完整长度信息
+        while (buffer_offset + OFFSET_LOG_TOT_LEN + sizeof(uint32_t) < num_bytes) {
             // 获取log的size
             int log_size = *reinterpret_cast<uint32_t *>(read_buf + buffer_offset + OFFSET_LOG_TOT_LEN);
             if (buffer_offset + log_size > num_bytes) {
