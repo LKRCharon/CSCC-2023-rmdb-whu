@@ -30,6 +30,13 @@ Transaction* TransactionManager::begin(Transaction* txn, LogManager* log_manager
     }
     // 3. 把开始事务加入到全局事务表中
     txn_map[txn->get_transaction_id()] = txn;
+
+    // 4.0 开启事务日志
+    auto log_rec = new BeginLogRecord(txn->get_transaction_id());
+    log_rec->prev_lsn_ = txn->get_prev_lsn();
+    txn->set_prev_lsn(log_manager->add_log_to_buffer(log_rec));
+    delete log_rec;
+
     return txn;
     // 4. 返回当前事务指针
 }
@@ -54,7 +61,13 @@ void TransactionManager::commit(Transaction* txn, LogManager* log_manager) {
     }
     // 3. 释放事务相关资源，eg.锁集
     txn->get_lock_set()->clear();
+
     // 4. 把事务日志刷入磁盘中
+    auto log_rec = new CommitLogRecord(txn->get_transaction_id());
+    log_rec->prev_lsn_ = txn->get_prev_lsn();
+    txn->set_prev_lsn(log_manager->add_log_to_buffer(log_rec));
+    log_manager->flush_log_to_disk();
+    delete log_rec;
 
     // 5. 更新事务状态
     txn->set_state(TransactionState::COMMITTED);
@@ -74,17 +87,28 @@ void TransactionManager::abort(Transaction* txn, LogManager* log_manager) {
     auto context = new Context(lock_manager_, log_manager, txn);
     while (!write_set->empty()) {
         auto write_rec = write_set->back();
+        auto& rm_file_hdl = sm_manager_->fhs_.at(write_rec->GetTableName());
         switch (write_rec->GetWriteType()) {
-            case WType::INSERT_TUPLE:
+            case WType::INSERT_TUPLE: {
                 sm_manager_->rollback_insert(write_rec->GetTableName(), write_rec->GetRid(), context);
                 break;
-            case WType::UPDATE_TUPLE:
+            }
+            case WType::UPDATE_TUPLE: {
                 sm_manager_->rollback_update(write_rec->GetTableName(), write_rec->GetRid(), write_rec->GetRecord(),
                                              context);
                 break;
-            case WType::DELETE_TUPLE:
+            }
+
+            case WType::DELETE_TUPLE: {
+                auto log_rec = new InsertLogRecord(txn->get_transaction_id(), write_rec->GetRecord(),
+                                                   write_rec->GetRid(), write_rec->GetTableName());
+                log_rec->prev_lsn_ = txn->get_prev_lsn();
+                txn->set_prev_lsn(log_manager->add_log_to_buffer(log_rec));
+                delete log_rec;
                 sm_manager_->rollback_delete(write_rec->GetTableName(), write_rec->GetRecord(), context);
                 break;
+            }
+
             default:
                 break;
         }
@@ -100,7 +124,14 @@ void TransactionManager::abort(Transaction* txn, LogManager* log_manager) {
     }
     // 3. 释放事务相关资源，eg.锁集
     txn->get_lock_set()->clear();
+
     // 4. 把事务日志刷入磁盘中
+    auto log_rec = new AbortLogRecord(txn->get_transaction_id());
+    log_rec->prev_lsn_ = txn->get_prev_lsn();
+    txn->set_prev_lsn(log_manager->add_log_to_buffer(log_rec));
+    log_manager->flush_log_to_disk();
+    delete log_rec;
+
     // 5. 更新事务状态
     txn->set_state(TransactionState::ABORTED);
 }

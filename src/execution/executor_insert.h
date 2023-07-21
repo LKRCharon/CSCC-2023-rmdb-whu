@@ -38,7 +38,7 @@ class InsertExecutor : public AbstractExecutor {
         }
         fh_ = sm_manager_->fhs_.at(tab_name).get();
         context_ = context;
-        context_->lock_mgr_->lock_IX_on_table(context_->txn_,fh_->GetFd());
+        context_->lock_mgr_->lock_IX_on_table(context_->txn_, fh_->GetFd());
     };
 
     std::unique_ptr<RmRecord> Next() override {
@@ -65,6 +65,7 @@ class InsertExecutor : public AbstractExecutor {
         }
         // Insert into record file
         rid_ = fh_->insert_record(rec.data, context_);
+
         // Insert into index
         for (size_t i = 0; i < tab_.indexes.size(); ++i) {
             auto &index = tab_.indexes[i];
@@ -81,10 +82,15 @@ class InsertExecutor : public AbstractExecutor {
                 throw IndexEntryRepeatError();
             }
         }
-        //context中记录insert语句,放在索引之后，如果repeat了就不会记录
-        WriteRecord *write_rec = new WriteRecord(WType::INSERT_TUPLE,tab_name_,rid_);
+        // context中记录insert语句,放在索引之后，如果repeat了就不会记录
+        WriteRecord *write_rec = new WriteRecord(WType::INSERT_TUPLE, tab_name_, rid_);
         context_->txn_->append_write_record(write_rec);
-
+        
+        auto log_rec = new InsertLogRecord(context_->txn_->get_transaction_id(), rec, rid_, tab_name_);
+        log_rec->prev_lsn_ = context_->txn_->get_prev_lsn();
+        context_->txn_->set_prev_lsn(context_->log_mgr_->add_log_to_buffer(log_rec));
+        fh_->update_page_lsn(rid_.page_no, log_rec->lsn_);
+        delete log_rec;
         return nullptr;
     }
     Rid &rid() override { return rid_; }

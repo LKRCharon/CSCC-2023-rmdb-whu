@@ -34,12 +34,12 @@ class DeleteExecutor : public AbstractExecutor {
         conds_ = conds;
         rids_ = rids;
         context_ = context;
-        context_->lock_mgr_->lock_IX_on_table(context_->txn_,fh_->GetFd());
+        context_->lock_mgr_->lock_IX_on_table(context_->txn_, fh_->GetFd());
     }
 
     std::unique_ptr<RmRecord> Next() override {
         // 翻转记录删除操作的顺序
-        std::deque<WriteRecord*> dq4reverse;
+        std::deque<WriteRecord *> dq4reverse;
         // Delete each rid from record file and index file
         for (auto &rid : rids_) {
             auto rec = fh_->get_record(rid, context_);
@@ -56,14 +56,22 @@ class DeleteExecutor : public AbstractExecutor {
                 ih->delete_entry(key, context_->txn_);
                 delete[] key;
             }
-            fh_->delete_record(rid, context_);
+            
+            bool is_deleted =  fh_->delete_record(rid, context_);
+            if(!is_deleted){break;}
 
             // 记一下删了那些rec
             RmRecord old_rec(rec->size);
-            memcpy(old_rec.data,rec->data,rec->size);
+            memcpy(old_rec.data, rec->data, rec->size);
 
-            WriteRecord *write_rec = new WriteRecord(WType::DELETE_TUPLE,tab_name_,rid,old_rec);
+            WriteRecord *write_rec = new WriteRecord(WType::DELETE_TUPLE, tab_name_, rid, old_rec);
             dq4reverse.push_back(write_rec);
+
+            auto log_rec = new DeleteLogRecord(context_->txn_->get_transaction_id(), old_rec, rid, tab_name_);
+            log_rec->prev_lsn_ = context_->txn_->get_prev_lsn();
+            context_->txn_->set_prev_lsn(context_->log_mgr_->add_log_to_buffer(log_rec));
+            fh_->update_page_lsn(rid.page_no, log_rec->lsn_);
+            delete log_rec;
         }
         context_->txn_->append_write_records_reverse(dq4reverse);
         return nullptr;

@@ -46,7 +46,9 @@ Rid RmFileHandle::insert_record(char* buf, Context* context) {
 
     // 0. txn copy之前上写锁
     auto rid = Rid{page_handle.page->get_page_id().page_no, slot_no};
-    context->lock_mgr_->lock_exclusive_on_record(context->txn_, rid, fd_);
+    if (context != nullptr) {
+        context->lock_mgr_->lock_exclusive_on_record(context->txn_, rid, fd_);
+    }
 
     // 3. 将buf复制到空闲slot位置
     memcpy(page_handle.get_slot(slot_no), buf, page_handle.file_hdr->record_size);
@@ -85,11 +87,16 @@ void RmFileHandle::insert_record(const Rid& rid, char* buf) {
  * @param {Rid&} rid 要删除的记录的记录号（位置）
  * @param {Context*} context
  */
-void RmFileHandle::delete_record(const Rid& rid, Context* context) {
+bool RmFileHandle::delete_record(const Rid& rid, Context* context) {
     // 1. 获取指定记录所在的page handle
     auto page_handle = fetch_page_handle(rid.page_no);
-    context->lock_mgr_->lock_exclusive_on_record(context->txn_, rid, fd_);
-
+    if (context != nullptr) {
+        context->lock_mgr_->lock_exclusive_on_record(context->txn_, rid, fd_);
+    }
+    if (!Bitmap::is_set(page_handle.bitmap, rid.slot_no)) {
+        bpm_->unpin_page(page_handle.page->get_page_id(), false);
+        return false;
+    }
     // 2. 更新page_handle.page_hdr中的数据结构
     auto slot = page_handle.get_slot(rid.slot_no);
     memset(slot, 0, page_handle.file_hdr->record_size);
@@ -101,6 +108,7 @@ void RmFileHandle::delete_record(const Rid& rid, Context* context) {
         release_page_handle(page_handle);
     }
     bpm_->unpin_page(page_handle.page->get_page_id(), true);
+    return true;
 }
 
 /**
@@ -112,7 +120,9 @@ void RmFileHandle::delete_record(const Rid& rid, Context* context) {
 void RmFileHandle::update_record(const Rid& rid, char* buf, Context* context) {
     // 1. 获取指定记录所在的page handle
     auto page_handle = fetch_page_handle(rid.page_no);
-    context->lock_mgr_->lock_exclusive_on_record(context->txn_, rid, fd_);
+    if (context != nullptr) {
+        context->lock_mgr_->lock_exclusive_on_record(context->txn_, rid, fd_);
+    }
 
     if (!Bitmap::is_set(page_handle.bitmap, rid.slot_no)) {
         throw RecordNotFoundError(rid.page_no, rid.slot_no);
@@ -156,6 +166,24 @@ RmPageHandle RmFileHandle::create_new_page_handle() {
     // 不需要判断有没有空闲页了，因为这个函数就是在没有空闲页时才被调用的
     file_hdr_.first_free_page_no = page->get_page_id().page_no;
     return RmPageHandle(&file_hdr_, page);
+}
+/**
+ * @description: 更新page的lsn
+ *
+ */
+void RmFileHandle::update_page_lsn(int page_no, lsn_t lsn) const {
+    // 1.获取指定pageId的page
+    PageId page_id;
+    page_id.page_no = page_no;
+    page_id.fd = fd_;
+    Page* page = bpm_->fetch_page(page_id);
+    if (page == nullptr) {
+        throw PageNotExistError("", page_no);
+    }
+    // 2。更新lsn
+    page->set_page_lsn(lsn);
+    // 3. unpin该page
+    bpm_->unpin_page(page_id, true);
 }
 
 /**

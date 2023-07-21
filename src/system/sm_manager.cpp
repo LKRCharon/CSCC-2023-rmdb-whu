@@ -199,7 +199,6 @@ void SmManager::desc_table(const std::string& tab_name, Context* context) {
  * @param {Context*} context
  */
 void SmManager::create_table(const std::string& tab_name, const std::vector<ColDef>& col_defs, Context* context) {
-
     if (db_.is_table(tab_name)) {
         throw TableExistsError(tab_name);
     }
@@ -385,6 +384,12 @@ void SmManager::rollback_insert(const std::string& tab_name, const Rid& rid, Con
         ih->delete_entry(key, context->txn_);
         delete[] key;
     }
+    Rid tmp = rid;
+    auto log_rec = new DeleteLogRecord(context->txn_->get_transaction_id(), *rec, tmp, tab_name);
+    log_rec->prev_lsn_ = context->txn_->get_prev_lsn();
+    context->txn_->set_prev_lsn(context->log_mgr_->add_log_to_buffer(log_rec));
+    delete log_rec;
+
     // 删记录
     fhs_.at(tab_name)->delete_record(rid, context);
 }
@@ -406,8 +411,15 @@ void SmManager::rollback_delete(const std::string& tab_name, const RmRecord& rec
     }
 }
 void SmManager::rollback_update(const std::string& tab_name, const Rid& rid, const RmRecord& record, Context* context) {
-    // 更新完的new rec，需要被回滚删掉,在反update记录之前拿
+    // 1. 更新完的new rec，需要被回滚删掉,在反update记录之前拿
     auto new_rec = fhs_.at(tab_name)->get_record(rid, context);
+    // abort log
+
+    auto log_rec = new UpdateLogRecord(context->txn_->get_transaction_id(), *new_rec, const_cast<RmRecord&>(record),
+                                       const_cast<Rid&>(rid), tab_name);
+    log_rec->prev_lsn_ = context->txn_->get_prev_lsn();
+    context->txn_->set_prev_lsn(context->log_mgr_->add_log_to_buffer(log_rec));
+    delete log_rec;
 
     fhs_.at(tab_name)->update_record(rid, record.data, context);
     TabMeta& tab = db_.get_table(tab_name);
