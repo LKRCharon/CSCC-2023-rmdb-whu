@@ -127,3 +127,23 @@ with open("aadebugsql/txn2_abort.sql", "w") as file:
     file.write('select * from txn2;\n');
     file.write('abort;\n');
     file.write('select * from txn2;\n');
+
+
+
+with open("aadebugsql/recovery/recovery.sql", "w") as file:
+    file.write('create table d (id int, name char(30),test2 bigint,test3 float);\n');
+    file.write('begin;\n');
+    for id in range(1,1001):
+        file.write(f"insert into d values({id},'name',2,{id/1.7:.6f});\n");
+
+    for id in range(1,101):
+        file.write(f"update d set test2={id} where id={id};\n");
+
+    file.write(f"delete from d where id>50 and id<100\n");
+    file.write('commit;\n');
+    file.write('begin;\n');
+    for id in range(101,500):
+        file.write(f"update d set test2={id} where id={id};\n");
+    file.write(f"delete d where id>101 and id<250\n");
+    file.write('abort;\n');
+    file.write('crash\n');

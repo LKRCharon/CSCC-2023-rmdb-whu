@@ -125,7 +125,7 @@ void RecoveryManager::analyze() {
 void RecoveryManager::redo() {
     for (auto rd : redo_logs_) {
         //准备读入log
-        int log_len = lsn_offsets_[rd];
+        int log_len = log_lens_[rd];
         char *log_buf = new char[log_len];
         memset(log_buf, 0, log_len);
         disk_manager_->read_log(log_buf, log_len, lsn_offsets_[rd]);
@@ -204,7 +204,7 @@ void RecoveryManager::undo() {
     for (auto it = undo_lsns_.begin(); it != undo_lsns_.end(); it++) {
         lsn_t lsn = it->second;
         while (lsn != INVALID_LSN) {
-            int log_len = lsn_offsets_[lsn];
+            int log_len = log_lens_[lsn];
             char *log_buf = new char[log_len];
             memset(log_buf, 0, log_len);
             disk_manager_->read_log(log_buf, log_len, lsn_offsets_[lsn]);
