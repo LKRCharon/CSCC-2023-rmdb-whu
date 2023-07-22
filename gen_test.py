@@ -176,6 +176,22 @@ with open("aadebugsql/recovery/single_thread_index.sql", "w") as file:
     file.write(f"delete from d where id>101 and id<250;\n");
     file.write('abort;\n');
     file.write('crash\n');
+with open("aadebugsql/recovery/single_thread_index_update.sql", "w") as file:
+    file.write('create table d (id int, name char(30),test2 bigint,test3 float);\n');
+    file.write('create index d(id);\n');
+    file.write('begin;\n');
+    for id in range(1,1001):
+        file.write(f"insert into d values({id},'name',2,{id/1.7:.6f});\n");
+
+    for id in range(1,101):
+        file.write(f"update d set id={id+1000} where id={id};\n");
+    file.write('commit;\n');
+    file.write('begin;\n');
+    for id in range(1,101):
+        file.write(f"update d set id={id} where id={id+1000};\n");
+    file.write(f"delete from d where id>101 and id<250;\n");
+    file.write('abort;\n');
+    file.write('crash\n');
 
 # TODO: Abort 回滚失败 07-21 19：00
 with open("aadebugsql/single_thread_recovery/insert_test.sql", "w") as file:
@@ -207,3 +223,26 @@ with open("aadebugsql/single_thread_recovery/update_delete_test.sql", "w") as fi
     file.write('abort;\n');
     
 
+with open("aadebugsql/single_thread_recovery/insert_join_test.sql", "w") as file:
+    file.write('create table d (id int, name char(16),test bigint,test2 bigint,test3 float);\n');
+    file.write('create table t (id int, name char(16));\n');
+    file.write('begin;\n');
+    for id in range(1,1001):
+        file.write(f"insert into d values({id},'name',1,2,{id/1.7:.6f});\n");
+        file.write(f"insert into t values({id},'name{id}');\n");
+    file.write('commit;\n');
+    file.write('select * from d,t;\n')
+
+with open("aadebugsql/single_thread_recovery/big_data_test.sql", "w") as file:
+    file.write('create table d (id int, name char(16),test bigint,test2 bigint,test3 float);\n');
+    file.write('create table t (id int, name char(16));\n');
+    file.write('begin;\n');
+    for id in range(1,20001):
+        file.write(f"insert into d values({id},'name',1,2,{id/1.7:.6f});\n");
+        file.write(f"insert into t values({id},'name{id}');\n");
+    file.write('commit;\n');
+    file.write('begin;\n');
+    file.write('select * from d where id>0;\n');
+    # file.write(f"update d set test2={id} where id<50001;\n");
+
+    

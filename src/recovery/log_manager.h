@@ -72,7 +72,6 @@ class BeginLogRecord : public LogRecord {
     // 从src中反序列化出一条Begin日志记录
     void deserialize(const char* src) override {
         LogRecord::deserialize(src);
-        format_print();
     }
     void format_print() override {
         std::cout << "log type in son_function: " << LogTypeStr[log_type_] << "\n";
@@ -98,7 +97,6 @@ class CommitLogRecord : public LogRecord {
     // 从src中反序列化出一条日志记录
     void deserialize(const char* src) override {
         LogRecord::deserialize(src);
-        format_print();
     }
     void format_print() override {
         std::cout << "log type in son_function: " << LogTypeStr[log_type_] << "\n";
@@ -124,7 +122,6 @@ class AbortLogRecord : public LogRecord {
     // 从src中反序列化出一条Begin日志记录
     void deserialize(const char* src) override {
         LogRecord::deserialize(src);
-        format_print();
     }
     void format_print() override {
         std::cout << "log type in son_function: " << LogTypeStr[log_type_] << "\n";
@@ -154,7 +151,6 @@ class InsertLogRecord : public LogRecord {
         table_name_ = new char[table_name_size_];
         memcpy(table_name_, table_name.c_str(), table_name_size_);
         log_tot_len_ += sizeof(size_t) + table_name_size_;
-        // format_print();
     }
     InsertLogRecord(txn_id_t txn_id, RmRecord& insert_value, Rid& rid, std::string table_name, bool is_roolback)
         : InsertLogRecord() {
@@ -171,7 +167,6 @@ class InsertLogRecord : public LogRecord {
         log_tot_len_ += sizeof(size_t) + table_name_size_;
         is_rollback_ = is_roolback;
         log_tot_len_ += sizeof(bool);
-        // format_print();
     }
 
     // 把insert日志记录序列化到dest中
@@ -203,7 +198,6 @@ class InsertLogRecord : public LogRecord {
         memcpy(table_name_, src + offset, table_name_size_);
         offset += table_name_size_;
         is_rollback_ = *reinterpret_cast<const bool*>(src + offset);
-        format_print();
     }
     void format_print() override {
         printf("insert record\n");
@@ -271,7 +265,6 @@ class DeleteLogRecord : public LogRecord {
         offset += sizeof(size_t);
         table_name_ = new char[table_name_size_];
         memcpy(table_name_, src + offset, table_name_size_);
-        format_print();
     }
     void format_print() override {
         printf("delete record\n");
@@ -315,7 +308,6 @@ class UpdateLogRecord : public LogRecord {
         table_name_ = new char[table_name_size_];
         memcpy(table_name_, table_name.c_str(), table_name_size_);
         log_tot_len_ += sizeof(size_t) + table_name_size_;
-        // format_print();
     }
 
     // 把insert日志记录序列化到dest中
@@ -349,7 +341,6 @@ class UpdateLogRecord : public LogRecord {
         offset += sizeof(size_t);
         table_name_ = new char[table_name_size_];
         memcpy(table_name_, src + offset, table_name_size_);
-        format_print();
     }
     void format_print() override {
         printf("--->  update record info <---\n");

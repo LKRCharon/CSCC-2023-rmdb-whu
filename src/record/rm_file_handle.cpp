@@ -76,17 +76,12 @@ Rid RmFileHandle::insert_record(char* buf, Context* context) {
 void RmFileHandle::insert_record(const Rid& rid, char* buf) {
     auto page_handle = fetch_page_handle(rid.page_no);
     auto slot = page_handle.get_slot(rid.slot_no);
-    bool t;
-    if (rid.page_no == 2 && rid.slot_no == 72) {
-        t = Bitmap::is_set(page_handle.bitmap, rid.slot_no);
-    }
-
+    
     if (!Bitmap::is_set(page_handle.bitmap, rid.slot_no)) {
         Bitmap::set(page_handle.bitmap, rid.slot_no);
         memcpy(slot, buf, file_hdr_.record_size);
         page_handle.page_hdr->num_records++;
     }
-    t = Bitmap::is_set(page_handle.bitmap, rid.slot_no);
     if (page_handle.page_hdr->num_records == page_handle.file_hdr->num_records_per_page) {
         file_hdr_.first_free_page_no = page_handle.page_hdr->next_free_page_no;
     }
@@ -138,10 +133,10 @@ void RmFileHandle::update_record(const Rid& rid, char* buf, Context* context) {
 
     // FixMe: bitmap 有几条会丢失，参考 aadebugsql/recovery/single_thread_index.sql
     // (2,72)以及前面的记录（147-154） bitmap都有丢失
-    // if (!Bitmap::is_set(page_handle.bitmap, rid.slot_no)) {
-    //     throw RecordNotFoundError(rid.page_no, rid.slot_no);
-    // }
-    Bitmap::set(page_handle.bitmap, rid.slot_no);
+    // Bitmap::set(page_handle.bitmap, rid.slot_no);
+    if (!Bitmap::is_set(page_handle.bitmap, rid.slot_no)) {
+        throw RecordNotFoundError(rid.page_no, rid.slot_no);
+    }
 
     // 2. 更新记录
     auto slot = page_handle.get_slot(rid.slot_no);
