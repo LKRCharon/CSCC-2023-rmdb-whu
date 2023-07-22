@@ -136,7 +136,13 @@ void RecoveryManager::redo() {
                 log_rec->deserialize(log_buf);
                 std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
 
-                log_rec->rid_ = sm_manager_->fhs_.at(tab_name)->insert_record(log_rec->insert_value_.data, nullptr);
+                // 根据是否为回滚里的insert采用不同的插入函数
+                if (log_rec->is_rollback_) {
+                    sm_manager_->fhs_.at(tab_name)->insert_record(log_rec->rid_, log_rec->insert_value_.data);
+                } else {
+                    log_rec->rid_ = sm_manager_->fhs_.at(tab_name)->insert_record(log_rec->insert_value_.data, nullptr);
+                }
+                
                 TabMeta &tab = sm_manager_->db_.get_table(tab_name);
 
                 for (size_t i = 0; i < tab.indexes.size(); ++i) {

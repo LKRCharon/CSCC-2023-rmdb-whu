@@ -100,12 +100,8 @@ void TransactionManager::abort(Transaction* txn, LogManager* log_manager) {
             }
 
             case WType::DELETE_TUPLE: {
-                auto log_rec = new InsertLogRecord(txn->get_transaction_id(), write_rec->GetRecord(),
-                                                   write_rec->GetRid(), write_rec->GetTableName());
-                log_rec->prev_lsn_ = txn->get_prev_lsn();
-                txn->set_prev_lsn(log_manager->add_log_to_buffer(log_rec));
-                delete log_rec;
-                sm_manager_->rollback_delete(write_rec->GetTableName(), write_rec->GetRecord(), context);
+                sm_manager_->rollback_delete(write_rec->GetTableName(), write_rec->GetRecord(),write_rec->GetRid(), context);
+                // sm_manager_->rollback_delete(write_rec->GetTableName(), write_rec->GetRecord(), context);
                 break;
             }
 

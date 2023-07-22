@@ -86,7 +86,7 @@ class InsertExecutor : public AbstractExecutor {
         WriteRecord *write_rec = new WriteRecord(WType::INSERT_TUPLE, tab_name_, rid_);
         context_->txn_->append_write_record(write_rec);
         
-        auto log_rec = new InsertLogRecord(context_->txn_->get_transaction_id(), rec, rid_, tab_name_);
+        auto log_rec = new InsertLogRecord(context_->txn_->get_transaction_id(), rec, rid_, tab_name_,false);
         log_rec->prev_lsn_ = context_->txn_->get_prev_lsn();
         context_->txn_->set_prev_lsn(context_->log_mgr_->add_log_to_buffer(log_rec));
         fh_->update_page_lsn(rid_.page_no, log_rec->lsn_);

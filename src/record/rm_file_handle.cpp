@@ -69,6 +69,7 @@ Rid RmFileHandle::insert_record(char* buf, Context* context) {
 
 /**
  * @description: 在当前表中的指定位置插入一条记录
+ * @note 用于rollback delete，避免delete后update+delete回滚时出现的问题
  * @param {Rid&} rid 要插入记录的位置
  * @param {char*} buf 要插入记录的数据
  */

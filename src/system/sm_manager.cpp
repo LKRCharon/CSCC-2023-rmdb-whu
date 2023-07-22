@@ -393,9 +393,16 @@ void SmManager::rollback_insert(const std::string& tab_name, const Rid& rid, Con
     // 删记录
     fhs_.at(tab_name)->delete_record(rid, context);
 }
+// 旧版，不根据rid插入 暂时废弃
 void SmManager::rollback_delete(const std::string& tab_name, const RmRecord& record, Context* context) {
     auto rid = fhs_.at(tab_name)->insert_record(record.data, context);
     TabMeta& tab = db_.get_table(tab_name);
+    // log
+    auto log_rec = new InsertLogRecord(context->txn_->get_transaction_id(), const_cast<RmRecord&>(record),
+                                       const_cast<Rid&>(rid), tab_name);
+    log_rec->prev_lsn_ = context->txn_->get_prev_lsn();
+    context->txn_->set_prev_lsn(context->log_mgr_->add_log_to_buffer(log_rec));
+    delete log_rec;
 
     for (size_t i = 0; i < tab.indexes.size(); ++i) {
         auto& index = tab.indexes.at(i);
@@ -410,6 +417,34 @@ void SmManager::rollback_delete(const std::string& tab_name, const RmRecord& rec
         delete[] key;
     }
 }
+
+// 新逻辑，回滚时根据rid插入
+void SmManager::rollback_delete(const std::string& tab_name, const RmRecord& record, Rid& rid, Context* context) {
+    TabMeta& tab = db_.get_table(tab_name);
+    // log
+    auto log_rec =
+        new InsertLogRecord(context->txn_->get_transaction_id(), const_cast<RmRecord&>(record), rid, tab_name, true);
+    log_rec->prev_lsn_ = context->txn_->get_prev_lsn();
+    context->txn_->set_prev_lsn(context->log_mgr_->add_log_to_buffer(log_rec));
+    delete log_rec;
+    // 按照rid插入值
+    fhs_.at(tab_name)->insert_record(rid, record.data);
+
+    // 回滚，插入索引
+    for (size_t i = 0; i < tab.indexes.size(); ++i) {
+        auto& index = tab.indexes.at(i);
+        auto ih = ihs_.at(get_ix_manager()->get_index_name(tab_name, index.cols)).get();
+        char* key = new char[index.col_total_len];
+        int offset = 0;
+        for (int j = 0; j < index.col_num; j++) {
+            memcpy(key + offset, record.data + index.cols[j].offset, index.cols[j].len);
+            offset += index.cols[j].len;
+        }
+        ih->insert_entry(key, rid, context->txn_);
+        delete[] key;
+    }
+}
+
 void SmManager::rollback_update(const std::string& tab_name, const Rid& rid, const RmRecord& record, Context* context) {
     // 1. 更新完的new rec，需要被回滚删掉,在反update记录之前拿
     auto new_rec = fhs_.at(tab_name)->get_record(rid, context);

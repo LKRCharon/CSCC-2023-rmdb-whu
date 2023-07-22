@@ -176,3 +176,34 @@ with open("aadebugsql/recovery/single_thread_index.sql", "w") as file:
     file.write(f"delete from d where id>101 and id<250;\n");
     file.write('abort;\n');
     file.write('crash\n');
+
+# TODO: Abort 回滚失败 07-21 19：00
+with open("aadebugsql/single_thread_recovery/insert_test.sql", "w") as file:
+    file.write('create table d (id int, name char(16),test bigint,test2 bigint,test3 float);\n');
+    file.write('begin;\n');
+    for id in range(1,1001):
+        file.write(f"insert into d values({id},'name',1,2,{id/1.7:.6f});\n");
+    file.write('commit;\n');
+    file.write('select * from d where id>0;\n');
+    file.write('begin;\n');
+    for id in range(1501,2001):
+        file.write(f"insert into d values({id},'name',1,2,{id/1.7:.6f});\n");
+    file.write('select * from d where id>0;\n');
+    # file.write('abort;\n');
+    # file.write('select * from d where id>0;\n');
+    file.write('crash\n');
+
+# TODO: Abort 回滚失败 07-21 19：00  delete->commit update delete abort
+with open("aadebugsql/single_thread_recovery/update_delete_test.sql", "w") as file:
+    file.write('create table d (id int, name char(16),test bigint,test2 bigint,test3 float);\n');
+    file.write('begin;\n');
+    for id in range(1,1001):
+        file.write(f"insert into d values({id},'name',1,2,{id/1.7:.6f});\n");
+    file.write(f"delete from d where id<=50;\n");
+    file.write('commit;\n');
+    file.write('begin;\n');
+    file.write(f"update d set test2={id} where id>=50 and id<101;\n");
+    file.write("delete from d where id>=50 and id<101;\n");
+    file.write('abort;\n');
+    
+
