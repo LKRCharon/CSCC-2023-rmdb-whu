@@ -341,11 +341,68 @@ void RecoveryManager::undo() {
                     log_rec->deserialize(log_buf);
                     std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
                     lsn = log_rec->prev_lsn_;
+                    // 开始update索引：
                     TabMeta &tab = sm_manager_->db_.get_table(tab_name);
-                    sm_manager_->fhs_.at(tab_name)->update_record(log_rec->rid_, log_rec->after_value_.data, nullptr);
+                    // 1. 判断新数据是否与原有索引重复
+                    for (size_t i = 0; i < tab.indexes.size(); ++i) {
+                        auto &index = tab.indexes.at(i);
+                        auto ih =
+                            sm_manager_->ihs_.at(sm_manager_->get_ix_manager()->get_index_name(tab_name, index.cols))
+                                .get();
+                        int offset = 0;
+                        char *old_key = new char[index.col_total_len];
+                        char *new_key = new char[index.col_total_len];
+                        for (int j = 0; j < index.col_num; j++) {
+                            memcpy(new_key + offset, log_rec->before_value_.data + index.cols[j].offset,
+                                   index.cols[j].len);
+                            memcpy(old_key + offset, log_rec->after_value_.data + index.cols[j].offset,
+                                   index.cols[j].len);
+                            offset += index.cols[j].len;
+                        }
+
+                        std::vector<Rid> old_rids;
+                        if (memcmp(new_key, old_key, index.col_total_len) == 0) {
+                            // 索引涉及的列s，前后key完全一致，不用判断是否有重复索引
+                            break;
+                        }
+                        if (ih->get_value(new_key, &old_rids, nullptr)) {
+                            // 要update的index已存在
+                            throw IndexEntryRepeatError();
+                        }
+                        // new出来的字符数组，delete
+                        delete[] old_key;
+                        delete[] new_key;
+                    }
+                    sm_manager_->fhs_.at(tab_name)->update_record(log_rec->rid_, log_rec->before_value_.data, nullptr);
+
+                    // 2. 更新索引
+                    for (size_t i = 0; i < tab.indexes.size(); ++i) {
+                        auto &index = tab.indexes.at(i);
+                        auto ih =
+                            sm_manager_->ihs_.at(sm_manager_->get_ix_manager()->get_index_name(tab_name, index.cols))
+                                .get();
+                        char *insert_key = new char[index.col_total_len];
+                        char *delete_key = new char[index.col_total_len];
+                        int offset = 0;
+                        for (int j = 0; j < index.col_num; j++) {
+                            memcpy(insert_key + offset, log_rec->before_value_.data + index.cols[j].offset,
+                                   index.cols[j].len);
+                            memcpy(delete_key + offset, log_rec->after_value_.data + index.cols[j].offset,
+                                   index.cols[j].len);
+                            offset += index.cols[j].len;
+                        }
+                        ih->delete_entry(delete_key, nullptr);
+                        bool is_insert = ih->insert_entry(insert_key, log_rec->rid_, nullptr);
+                        if (!is_insert) {
+                            // fh_->delete_record(rid, context_);
+                            // 这里应该走不到
+                            throw IndexEntryRepeatError();
+                        }
+                        delete[] insert_key;
+                        delete[] delete_key;
+                    }
                     delete log_rec;
                     break;
-                    /////Update未考虑索引
                 }
 
                 default:

@@ -853,7 +853,6 @@ void IxIndexHandle::erase_leaf(IxNodeHandle *leaf) {
     IxNodeHandle *prev = fetch_node(leaf->get_prev_leaf());
     prev->set_next_leaf(leaf->get_next_leaf());
     bpm_->unpin_page(prev->get_page_id(), true);
-
     IxNodeHandle *next = fetch_node(leaf->get_next_leaf());
     next->set_prev_leaf(leaf->get_prev_leaf());  // 注意此处是SetPrevLeaf()
     bpm_->unpin_page(next->get_page_id(), true);

@@ -233,7 +233,7 @@ with open("aadebugsql/single_thread_recovery/insert_join_test.sql", "w") as file
     file.write('commit;\n');
     file.write('select * from d,t;\n')
 
-with open("aadebugsql/single_thread_recovery/big_data_test.sql", "w") as file:
+with open("aadebugsql/single_thread_recovery/big_data_test1.sql", "w") as file:
     file.write('create table d (id int, name char(16),test bigint,test2 bigint,test3 float);\n');
     file.write('create table t (id int, name char(16));\n');
     file.write('begin;\n');
@@ -243,6 +243,47 @@ with open("aadebugsql/single_thread_recovery/big_data_test.sql", "w") as file:
     file.write('commit;\n');
     file.write('begin;\n');
     file.write('select * from d where id>0;\n');
+    file.write("delete from d where id<=500;\n");
+    for id in range(1,1001):
+        file.write(f"update d set id={id-1} where id={id};\n");
+    file.write('commit;\n');
+    file.write('select * from d;\n');
+    # file.write('begin;\n');
+    # file.write('abort;\n');
+    # file.write('select * from d where id<=7500;\n');
+    file.write('crash\n');
     # file.write(f"update d set test2={id} where id<50001;\n");
 
-    
+with open("aadebugsql/single_thread_recovery/little_buffer.sql", "w") as file:
+    file.write('create table d (id int, name char(16),test bigint,test2 bigint,test3 float);\n');
+    file.write('begin;\n');
+    for id in range(1,50001):
+        file.write(f"insert into d values({id},'name',1,2,{id/1.7:.6f});\n");#插5w
+    file.write("update d set test3=6.66 where id>0 and id<10001;\n")#更新前1w
+    file.write("delete from d where test3=6.66 and id<5001;\n");#删除前5k
+    for id in range(50001,60001):
+        file.write(f"insert into d values({id},'name',1,2,6.66);\n");#再插1w
+    file.write('commit;\n');
+    file.write('select * from d order by id;\n');
+    file.write('begin;\n');
+    file.write("update d set test3=8.88 where id>0 and id<60001;\n")#5.5w条全部更新
+    file.write("delete from d where test3=8.88;\n");#全部删除    
+    file.write('crash\n');#回滚
+
+with open("aadebugsql/single_thread_recovery/index_test.sql", "w") as file:
+    file.write('create table d (id int, name char(16),test bigint,test2 bigint,test3 float);\n');
+    file.write('create index d(id);\n')
+    file.write('begin;\n');
+    for id in range(1,50001):
+        file.write(f"insert into d values({id},'name',1,2,{id/1.7:.6f});\n");#插5w
+    file.write("update d set test3=6.66 where id>0 and id<10001;\n")#更新前1w
+    file.write('select * from d where id>0 and id<10001;\n');
+    file.write("delete from d where test3=6.66 and id<5001;\n");#删除前5k
+    for id in range(50001,60001):
+        file.write(f"insert into d values({id},'name',1,2,6.66);\n");#再插1w
+    file.write('commit;\n');
+    file.write('select * from d where id>0;\n');
+    file.write('begin;\n');
+    file.write("update d set test3=8.88 where id>0 and id<60001;\n")#5.5w条全部更新
+    file.write("delete from d where test3=8.88;\n");#全部删除    
+    file.write('crash\n');#回滚
