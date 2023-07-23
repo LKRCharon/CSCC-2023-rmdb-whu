@@ -52,6 +52,7 @@ void BufferPoolManager::update_page(Page* page, PageId new_page_id, frame_id_t n
     // 3 重置page的data，更新page id
     page->reset_memory();
     page->set_page_id(new_page_id);
+    page->pin_count_=0;
 }
 
 /**
@@ -87,7 +88,7 @@ Page* BufferPoolManager::fetch_page(PageId page_id) {
     disk_manager_->read_page(page_id.fd, page_id.page_no, page->data_, PAGE_SIZE);
     // 4.     固定目标页，更新pin_count_
     replacer_->pin(frame_id);
-    page->pin_count_ ++;
+    page->pin_count_ = 1;
     // 5.     返回目标页
     return page;
 }
@@ -112,7 +113,7 @@ bool BufferPoolManager::unpin_page(PageId page_id, bool is_dirty) {
     auto page = pages_ + iter->second;
 
     // 2.1 若pin_count_已经等于0，则返回false
-    if (page->pin_count_ == 0) {
+    if (page->pin_count_ <= 0) {
         return false;
     }
     // 2.2 若pin_count_大于0，则pin_count_自减一
@@ -200,7 +201,7 @@ bool BufferPoolManager::delete_page(PageId page_id) {
     }
     // 2.   若目标页的pin_count不为0，则返回false
     auto page = pages_ + iter->second;
-    if (page->pin_count_ > 0) {
+    if (page->pin_count_ != 0) {
         return false;
     }
     // 3.1  将目标页数据写回磁盘，
@@ -208,7 +209,7 @@ bool BufferPoolManager::delete_page(PageId page_id) {
     // 3.2 从页表中删除目标页
     page_table_.erase(page_id);
     // 3.3 重置元数据 最佳方法是什么？
-    page->set_page_id({});
+    // page->set_page_id({});
     page->is_dirty_ = false;
     page->pin_count_ = 0;
     page->reset_memory();
@@ -242,10 +243,10 @@ void BufferPoolManager::delete_all_pages(int fd) {
         auto page = pages_ + iter->second;
         // 要加一个fd的判断 参考自rucbase的函数
         if (page->get_page_id().fd == fd) {
+            replacer_->unpin(iter->second);
             // 3.2 从页表中删除目标页
             iter = page_table_.erase(iter);
             // 3.3 重置元数据 最佳方法是什么？
-            page->set_page_id({});
             page->is_dirty_ = false;
             page->pin_count_ = 0;
             page->reset_memory();

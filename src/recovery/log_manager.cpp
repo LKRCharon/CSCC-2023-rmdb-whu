@@ -23,7 +23,10 @@ lsn_t LogManager::add_log_to_buffer(LogRecord* log_record) {
 
     // 循环等待，直到缓冲区有空闲空间
     if (log_buffer_.is_full(log_len)) {
-        cv_.wait(lock);
+        // cv_.wait(lock);
+        lock.unlock();
+        flush_log_to_disk();
+        lock.lock();
         // 当条件变量被唤醒后，继续检查缓冲区是否满，以防止虚假唤醒
     }
     log_record->lsn_ = global_lsn_.fetch_add(1);
@@ -46,9 +49,6 @@ void LogManager::flush_log_to_disk() {
     persist_lsn_ = global_lsn_;
     memset(log_buffer_.buffer_, 0, log_buffer_.offset_);
     log_buffer_.offset_ = 0;
-
-    // 唤醒一个等待的线程，表示缓冲区有空闲空间
-    cv_.notify_one();
 }
 
 void LogManager::set_global_lsn_(lsn_t lsn) { global_lsn_.store(lsn); };

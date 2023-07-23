@@ -237,7 +237,7 @@ with open("aadebugsql/single_thread_recovery/big_data_test.sql", "w") as file:
     file.write('create table d (id int, name char(16),test bigint,test2 bigint,test3 float);\n');
     file.write('create table t (id int, name char(16));\n');
     file.write('begin;\n');
-    for id in range(1,20001):
+    for id in range(1,50001):
         file.write(f"insert into d values({id},'name',1,2,{id/1.7:.6f});\n");
         file.write(f"insert into t values({id},'name{id}');\n");
     file.write('commit;\n');

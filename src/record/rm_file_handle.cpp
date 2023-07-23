@@ -168,14 +168,18 @@ RmPageHandle RmFileHandle::create_new_page_handle() {
     // 1.使用缓冲池来创建一个新page
     PageId page_id = {.fd = fd_, .page_no = INVALID_PAGE_ID};
     auto page = bpm_->new_page(&page_id);
+
     // 2.更新page handle中的相关信息
-    auto page_hdr = reinterpret_cast<RmPageHdr*>(page->get_data() + page->OFFSET_PAGE_HDR);
-    page_hdr->next_free_page_no = -1;
+    RmPageHandle page_handle = RmPageHandle(&file_hdr_,page);
+    page_handle.page_hdr->num_records = 0;
+    page_handle.page_hdr->next_free_page_no = RM_NO_PAGE;
+    Bitmap::init(page_handle.bitmap,file_hdr_.bitmap_size);
+
     // 3.更新file_hdr_
     file_hdr_.num_pages++;
     // 不需要判断有没有空闲页了，因为这个函数就是在没有空闲页时才被调用的
     file_hdr_.first_free_page_no = page->get_page_id().page_no;
-    return RmPageHandle(&file_hdr_, page);
+    return page_handle;
 }
 /**
  * @description: 更新page的lsn
