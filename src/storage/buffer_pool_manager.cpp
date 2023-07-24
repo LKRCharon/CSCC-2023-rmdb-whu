@@ -25,7 +25,12 @@ bool BufferPoolManager::find_victim_page(frame_id_t* frame_id) {
         return true;
     }
     // 1.2 已满使用lru_replacer中的方法选择淘汰页面
-    return replacer_->victim(frame_id);
+    bool flag = replacer_->victim(frame_id);
+    auto page = pages_ + *frame_id;
+    if (page->is_dirty() && page->get_page_lsn() > log_manager_->get_persist_lsn_()) {
+        log_manager_->flush_log_to_disk();
+    }
+    return flag;
 }
 
 /**
@@ -52,7 +57,7 @@ void BufferPoolManager::update_page(Page* page, PageId new_page_id, frame_id_t n
     // 3 重置page的data，更新page id
     page->reset_memory();
     page->set_page_id(new_page_id);
-    page->pin_count_=0;
+    page->pin_count_ = 0;
 }
 
 /**

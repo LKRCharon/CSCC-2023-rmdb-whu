@@ -10,8 +10,18 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
+#include <fcntl.h>
+#include <unistd.h>
+
+#include <cassert>
+#include <list>
+#include <unordered_map>
+#include <vector>
 #include "defs.h"
-#include "storage/buffer_pool_manager.h"
+#include "errors.h"
+#include "storage/page.h"
+// #include "storage/buffer_pool_manager.h"
+// class BufferPoolManager;
 
 constexpr int RM_NO_PAGE = -1;
 constexpr int RM_FILE_HDR_PAGE = 0;
@@ -20,11 +30,11 @@ constexpr int RM_MAX_RECORD_SIZE = 512;
 
 /* 文件头，记录表数据文件的元信息，写入磁盘中文件的第0号页面 */
 struct RmFileHdr {
-    int record_size;            // 表中每条记录的大小，由于不包含变长字段，因此当前字段初始化后保持不变
-    int num_pages;              // 文件中分配的页面个数（初始化为1）
-    int num_records_per_page;   // 每个页面最多能存储的元组个数
-    int first_free_page_no;     // 文件中当前第一个包含空闲空间的页面号（初始化为-1）
-    int bitmap_size;            // 每个页面bitmap大小（字节）
+    int record_size;  // 表中每条记录的大小，由于不包含变长字段，因此当前字段初始化后保持不变
+    int num_pages;             // 文件中分配的页面个数（初始化为1）
+    int num_records_per_page;  // 每个页面最多能存储的元组个数
+    int first_free_page_no;    // 文件中当前第一个包含空闲空间的页面号（初始化为-1）
+    int bitmap_size;           // 每个页面bitmap大小（字节）
 };
 
 /* 表数据文件中每个页面的页头，记录每个页面的元信息 */
@@ -35,9 +45,9 @@ struct RmPageHdr {
 
 /* 表中的记录 */
 struct RmRecord {
-    char* data;  // 记录的数据
-    int size;    // 记录的大小
-    bool allocated_ = false;    // 是否已经为数据分配空间
+    char* data;               // 记录的数据
+    int size;                 // 记录的大小
+    bool allocated_ = false;  // 是否已经为数据分配空间
 
     RmRecord() = default;
 
@@ -48,7 +58,7 @@ struct RmRecord {
         allocated_ = true;
     };
 
-    RmRecord &operator=(const RmRecord& other) {
+    RmRecord& operator=(const RmRecord& other) {
         size = other.size;
         data = new char[size];
         memcpy(data, other.data, size);
@@ -69,13 +79,11 @@ struct RmRecord {
         allocated_ = true;
     }
 
-    void SetData(char* data_) {
-        memcpy(data, data_, size);
-    }
+    void SetData(char* data_) { memcpy(data, data_, size); }
 
     void Deserialize(const char* data_) {
         size = *reinterpret_cast<const int*>(data_);
-        if(allocated_) {
+        if (allocated_) {
             delete[] data;
         }
         data = new char[size];
@@ -83,7 +91,7 @@ struct RmRecord {
     }
 
     ~RmRecord() {
-        if(allocated_) {
+        if (allocated_) {
             delete[] data;
         }
         allocated_ = false;

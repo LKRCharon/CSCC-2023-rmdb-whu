@@ -15,7 +15,7 @@ See the Mulan PSL v2 for more details. */
  */
 void RecoveryManager::analyze() {
     //用来从日志文件中读取
-    char read_buf[LOG_BUFFER_SIZE];
+    char* read_buf = new char[LOG_BUFFER_SIZE];
     // read_buf的偏置
     int buffer_offset = 0;
     //定位文件的偏置
@@ -123,6 +123,7 @@ void RecoveryManager::analyze() {
             break;
         }
     }
+    delete[] read_buf;
 }
 
 /**

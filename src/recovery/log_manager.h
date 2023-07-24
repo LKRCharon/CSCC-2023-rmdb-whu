@@ -70,9 +70,7 @@ class BeginLogRecord : public LogRecord {
     // 序列化Begin日志记录到dest中
     void serialize(char* dest) const override { LogRecord::serialize(dest); }
     // 从src中反序列化出一条Begin日志记录
-    void deserialize(const char* src) override {
-        LogRecord::deserialize(src);
-    }
+    void deserialize(const char* src) override { LogRecord::deserialize(src); }
     void format_print() override {
         std::cout << "log type in son_function: " << LogTypeStr[log_type_] << "\n";
         LogRecord::format_print();
@@ -95,9 +93,7 @@ class CommitLogRecord : public LogRecord {
     // 序列化日志记录到dest中
     void serialize(char* dest) const override { LogRecord::serialize(dest); }
     // 从src中反序列化出一条日志记录
-    void deserialize(const char* src) override {
-        LogRecord::deserialize(src);
-    }
+    void deserialize(const char* src) override { LogRecord::deserialize(src); }
     void format_print() override {
         std::cout << "log type in son_function: " << LogTypeStr[log_type_] << "\n";
         LogRecord::format_print();
@@ -120,9 +116,7 @@ class AbortLogRecord : public LogRecord {
     // 序列化Begin日志记录到dest中
     void serialize(char* dest) const override { LogRecord::serialize(dest); }
     // 从src中反序列化出一条Begin日志记录
-    void deserialize(const char* src) override {
-        LogRecord::deserialize(src);
-    }
+    void deserialize(const char* src) override { LogRecord::deserialize(src); }
     void format_print() override {
         std::cout << "log type in son_function: " << LogTypeStr[log_type_] << "\n";
         LogRecord::format_print();
@@ -139,6 +133,7 @@ class InsertLogRecord : public LogRecord {
         prev_lsn_ = INVALID_LSN;
         table_name_ = nullptr;
     }
+    ~InsertLogRecord() { delete[] table_name_; }
     InsertLogRecord(txn_id_t txn_id, RmRecord& insert_value, Rid& rid, std::string table_name) : InsertLogRecord() {
         log_tid_ = txn_id;
         // insert_value_ = RmRecord(insert_value.size,insert_value.data);
@@ -227,6 +222,8 @@ class DeleteLogRecord : public LogRecord {
         prev_lsn_ = INVALID_LSN;
         table_name_ = nullptr;
     }
+    ~DeleteLogRecord() { delete[] table_name_; }
+
     DeleteLogRecord(txn_id_t txn_id, RmRecord& delete_value, Rid& rid, std::string table_name) : DeleteLogRecord() {
         log_tid_ = txn_id;
         delete_value_ = delete_value;
@@ -293,6 +290,8 @@ class UpdateLogRecord : public LogRecord {
         prev_lsn_ = INVALID_LSN;
         table_name_ = nullptr;
     }
+    ~UpdateLogRecord() { delete[] table_name_; }
+
     UpdateLogRecord(txn_id_t txn_id, RmRecord& before_value, RmRecord& after_value, Rid& rid, std::string table_name)
         : UpdateLogRecord() {
         log_tid_ = txn_id;
@@ -363,10 +362,11 @@ class UpdateLogRecord : public LogRecord {
 class LogBuffer {
    public:
     LogBuffer() {
+        buffer_ = new char[LOG_BUFFER_SIZE + 1];
         offset_ = 0;
-        memset(buffer_, 0, sizeof(buffer_));
+        memset(buffer_, 0, LOG_BUFFER_SIZE + 1);
     }
-
+    ~LogBuffer() { delete[] buffer_; }
     bool is_full(int append_size) {
         if (offset_ + append_size > LOG_BUFFER_SIZE) return true;
         return false;
@@ -380,7 +380,7 @@ class LogBuffer {
         offset_ = 0;
     }
 
-    char buffer_[LOG_BUFFER_SIZE + 1];
+    char* buffer_;
     int offset_;  // 写入log的offset
 };
 
@@ -395,6 +395,8 @@ class LogManager {
     LogBuffer* get_log_buffer() { return &log_buffer_; }
 
     void set_global_lsn_(lsn_t lsn);
+    void set_persist_lsn_(lsn_t lsn);
+    lsn_t get_persist_lsn_() { return persist_lsn_; };
 
    private:
     std::atomic<lsn_t> global_lsn_{0};  // 全局lsn，递增，用于为每条记录分发lsn

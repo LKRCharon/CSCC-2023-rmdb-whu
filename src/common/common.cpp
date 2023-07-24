@@ -10,7 +10,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/common.h"
 #include <regex>
-#include <regex>
+#include "error.h"
 long long DatetimeStrToLL(const std::string &str) {
     // 匹配下大致格式 防止带负或者长度不对
     std::regex pattern(R"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})");
@@ -41,14 +41,13 @@ long long DatetimeStrToLL(const std::string &str) {
             isFeb = true;
         }
         if (index == 2 && isFeb) {
-            int year = static_cast<int>(time/10000);
-            if((year%4==0&&year%100!=0)|| year % 400 == 0){
-                if(value>29){
+            int year = static_cast<int>(time / 10000);
+            if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) {
+                if (value > 29) {
                     throw DatetimeFormatError(str);
                 }
-            }
-            else{
-                if(value>28){
+            } else {
+                if (value > 28) {
                     throw DatetimeFormatError(str);
                 }
             }
