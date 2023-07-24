@@ -290,3 +290,4 @@ with open("aadebugsql/single_thread_recovery/index_test.sql", "w") as file:
     file.write("update d set test3=8.88 where id>0 and id<60001;\n")#5.5w条全部更新
     file.write("delete from d where test3=8.88;\n");#全部删除    
     file.write('crash\n');#回滚
+    

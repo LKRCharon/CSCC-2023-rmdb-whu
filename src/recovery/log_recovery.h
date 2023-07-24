@@ -49,5 +49,6 @@ class RecoveryManager {
     std::unordered_map<lsn_t, int> lsn_offsets_;     // 记录lsn与offset
     std::unordered_map<lsn_t, int> log_lens_;        // 记录每个log的size
     std::unordered_map<txn_id_t, lsn_t> undo_lsns_;  // 需要undo的事务的最后一条lsn   ATT
-    std::vector<lsn_t> redo_logs_;                   // 需要redo的log集合 DPT
+    // std::vector<lsn_t> redo_logs_;                   // 需要redo的log集合 DPT
+    std::vector<std::pair<lsn_t, bool>> redo_logs_;  // 需要redo的log集合
 };

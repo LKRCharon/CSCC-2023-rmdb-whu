@@ -62,7 +62,6 @@ void RecoveryManager::analyze() {
                     file_offset += log_rec->log_tot_len_;
                     undo_lsns_.erase(log_rec->log_tid_);
                     txn_manager_->set_next_txn_id(log_rec->log_tid_);
-
                     log_manager_->set_global_lsn_(log_rec->lsn_);
                     delete log_rec;
                     break;
@@ -89,9 +88,8 @@ void RecoveryManager::analyze() {
                     buffer_offset += log_rec->log_tot_len_;
                     file_offset += log_rec->log_tot_len_;
                     undo_lsns_[log_rec->log_tid_] = log_rec->lsn_;
-                    redo_logs_.push_back(log_rec->lsn_);
+                    redo_logs_.push_back({log_rec->lsn_, true});
                     txn_manager_->set_next_txn_id(log_rec->log_tid_);
-
                     log_manager_->set_global_lsn_(log_rec->lsn_);
                     delete log_rec;
                     break;
@@ -104,7 +102,8 @@ void RecoveryManager::analyze() {
                     buffer_offset += log_rec->log_tot_len_;
                     file_offset += log_rec->log_tot_len_;
                     undo_lsns_[log_rec->log_tid_] = log_rec->lsn_;
-                    redo_logs_.push_back(log_rec->lsn_);
+                    redo_logs_.push_back({log_rec->lsn_, true});
+
                     txn_manager_->set_next_txn_id(log_rec->log_tid_);
 
                     log_manager_->set_global_lsn_(log_rec->lsn_);
@@ -119,7 +118,8 @@ void RecoveryManager::analyze() {
                     buffer_offset += log_rec->log_tot_len_;
                     file_offset += log_rec->log_tot_len_;
                     undo_lsns_[log_rec->log_tid_] = log_rec->lsn_;
-                    redo_logs_.push_back(log_rec->lsn_);
+                    redo_logs_.push_back({log_rec->lsn_, true});
+
                     txn_manager_->set_next_txn_id(log_rec->log_tid_);
 
                     log_manager_->set_global_lsn_(log_rec->lsn_);
@@ -134,6 +134,69 @@ void RecoveryManager::analyze() {
             break;
         }
     }
+
+    // 读取完全部日志文件，根据undo删掉redo里的
+    for (auto it = undo_lsns_.begin(); it != undo_lsns_.end(); it++) {
+        lsn_t lsn = it->second;
+        std::vector<std::pair<lsn_t, bool>>::reverse_iterator vit = redo_logs_.rbegin();
+        while (lsn != INVALID_LSN) {
+            int log_len = log_lens_[lsn];
+            char *log_buf = new char[log_len];
+            memset(log_buf, 0, log_len);
+            disk_manager_->read_log(log_buf, log_len, lsn_offsets_[lsn]);
+            LogType log_type = *(LogType *)log_buf;
+            switch (log_type) {
+                case LogType::BEGIN: {
+                    lsn = -1;
+                    break;
+                }
+                case LogType::INSERT: {
+                    InsertLogRecord *log_rec = new InsertLogRecord();
+                    log_rec->deserialize(log_buf);
+                    while (vit != redo_logs_.rend() && vit->first != lsn) {
+                        vit++;
+                    }
+                    vit->second = false;
+                    // vit++;
+                    lsn = log_rec->prev_lsn_;
+                    delete log_rec;
+
+                    break;
+                }
+                case LogType::DELETE: {
+                    DeleteLogRecord *log_rec = new DeleteLogRecord();
+                    log_rec->deserialize(log_buf);
+                    while (vit != redo_logs_.rend() && vit->first != lsn) {
+                        vit++;
+                    }
+                    vit->second = false;
+                    // vit++;
+                    lsn = log_rec->prev_lsn_;
+                    delete log_rec;
+
+                    break;
+                }
+                case LogType::UPDATE: {
+                    UpdateLogRecord *log_rec = new UpdateLogRecord();
+                    log_rec->deserialize(log_buf);
+                    while (vit != redo_logs_.rend() && vit->first != lsn) {
+                        vit++;
+                    }
+                    vit->second = false;
+                    // vit++;
+                    lsn = log_rec->prev_lsn_;
+                    delete log_rec;
+
+                    break;
+                }
+                default:
+                    // 其他情况的处理
+                    break;
+            }
+            delete[] log_buf;
+        }
+    }
+
     delete[] read_buf;
 }
 
@@ -141,8 +204,12 @@ void RecoveryManager::analyze() {
  * @description: 重做所有操作
  */
 void RecoveryManager::redo() {
-    for (auto rd : redo_logs_) {
+    for (auto pair : redo_logs_) {
+        if (pair.second == false) {
+            continue;
+        }
         //准备读入log
+        auto rd = pair.first;
         int log_len = log_lens_[rd];
         char *log_buf = new char[log_len];
         memset(log_buf, 0, log_len);
@@ -153,13 +220,18 @@ void RecoveryManager::redo() {
                 InsertLogRecord *log_rec = new InsertLogRecord();
                 log_rec->deserialize(log_buf);
                 std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
-
+                // auto page_handle = sm_manager_->fhs_.at(tab_name)->fetch_page_handle(log_rec->rid_.page_no);
+                // if (page_handle.page->get_page_lsn() > log_rec->lsn_) {
+                //     sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), false);
+                //     break;
+                // }
                 // 根据是否为回滚里的insert采用不同的插入函数
                 if (log_rec->is_rollback_) {
                     sm_manager_->fhs_.at(tab_name)->insert_record(log_rec->rid_, log_rec->insert_value_.data);
                 } else {
                     log_rec->rid_ = sm_manager_->fhs_.at(tab_name)->insert_record(log_rec->insert_value_.data, nullptr);
                 }
+                // sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), true);
 
                 TabMeta &tab = sm_manager_->db_.get_table(tab_name);
 
@@ -186,6 +258,11 @@ void RecoveryManager::redo() {
                 DeleteLogRecord *log_rec = new DeleteLogRecord();
                 log_rec->deserialize(log_buf);
                 std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
+                // auto page_handle = sm_manager_->fhs_.at(tab_name)->fetch_page_handle(log_rec->rid_.page_no);
+                // if (page_handle.page->get_page_lsn() > log_rec->lsn_) {
+                //     sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), false);
+                //     break;
+                // }
 
                 TabMeta &tab = sm_manager_->db_.get_table(tab_name);
                 for (size_t i = 0; i < tab.indexes.size(); ++i) {
@@ -202,6 +279,7 @@ void RecoveryManager::redo() {
                     delete[] key;
                 }
                 sm_manager_->fhs_.at(tab_name)->delete_record(log_rec->rid_, nullptr);
+                // sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), true);
                 delete log_rec;
                 break;
             }
@@ -209,6 +287,11 @@ void RecoveryManager::redo() {
                 UpdateLogRecord *log_rec = new UpdateLogRecord();
                 log_rec->deserialize(log_buf);
                 std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
+                // auto page_handle = sm_manager_->fhs_.at(tab_name)->fetch_page_handle(log_rec->rid_.page_no);
+                // if (page_handle.page->get_page_lsn() > log_rec->lsn_) {
+                //     sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), false);
+                //     break;
+                // }
                 // 开始update索引：
                 TabMeta &tab = sm_manager_->db_.get_table(tab_name);
                 // 1. 判断新数据是否与原有索引重复
@@ -240,6 +323,7 @@ void RecoveryManager::redo() {
                 }
                 // 更新记录数据
                 sm_manager_->fhs_.at(tab_name)->update_record(log_rec->rid_, log_rec->after_value_.data, nullptr);
+                // sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), true);
 
                 // 2. 更新索引
                 for (size_t i = 0; i < tab.indexes.size(); ++i) {
@@ -301,6 +385,12 @@ void RecoveryManager::undo() {
                     log_rec->deserialize(log_buf);
                     lsn = log_rec->prev_lsn_;
                     std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
+                    // auto page_handle = sm_manager_->fhs_.at(tab_name)->fetch_page_handle(log_rec->rid_.page_no);
+                    // if (page_handle.page->get_page_lsn() > log_rec->lsn_) {
+                    //     sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), false);
+                    //     break;
+                    // }
+
                     TabMeta &tab = sm_manager_->db_.get_table(tab_name);
                     for (size_t i = 0; i < tab.indexes.size(); ++i) {
                         auto &index = tab.indexes.at(i);
@@ -316,17 +406,25 @@ void RecoveryManager::undo() {
                         ih->delete_entry(key, nullptr);
                         delete[] key;
                     }
+
                     sm_manager_->fhs_.at(tab_name)->delete_record(log_rec->rid_, nullptr);
+                    // sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), true);
                     delete log_rec;
                     break;
                 }
                 case LogType::DELETE: {
                     DeleteLogRecord *log_rec = new DeleteLogRecord();
                     log_rec->deserialize(log_buf);
-                    std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
                     lsn = log_rec->prev_lsn_;
+                    std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
+                    // auto page_handle = sm_manager_->fhs_.at(tab_name)->fetch_page_handle(log_rec->rid_.page_no);
+                    // if (page_handle.page->get_page_lsn() > log_rec->lsn_) {
+                    //     sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), false);
+                    //     break;
+                    // }
 
                     sm_manager_->fhs_.at(tab_name)->insert_record(log_rec->rid_, log_rec->delete_value_.data);
+                    // sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), true);
 
                     TabMeta &tab = sm_manager_->db_.get_table(tab_name);
                     for (size_t i = 0; i < tab.indexes.size(); ++i) {
@@ -352,8 +450,13 @@ void RecoveryManager::undo() {
                 case LogType::UPDATE: {
                     UpdateLogRecord *log_rec = new UpdateLogRecord();
                     log_rec->deserialize(log_buf);
-                    std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
                     lsn = log_rec->prev_lsn_;
+                    std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
+                    // auto page_handle = sm_manager_->fhs_.at(tab_name)->fetch_page_handle(log_rec->rid_.page_no);
+                    // if (page_handle.page->get_page_lsn() > log_rec->lsn_) {
+                    //     sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), false);
+                    //     break;
+                    // }
                     // 开始update索引：
                     TabMeta &tab = sm_manager_->db_.get_table(tab_name);
                     // 1. 判断新数据是否与原有索引重复
@@ -387,6 +490,7 @@ void RecoveryManager::undo() {
                         delete[] new_key;
                     }
                     sm_manager_->fhs_.at(tab_name)->update_record(log_rec->rid_, log_rec->before_value_.data, nullptr);
+                    // sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), true);
 
                     // 2. 更新索引
                     for (size_t i = 0; i < tab.indexes.size(); ++i) {
@@ -425,3 +529,5 @@ void RecoveryManager::undo() {
         }
     }
 }
+
+// void RecoveryManager::flush() { bpm_->flush_all_pages(); }

@@ -231,6 +231,16 @@ void BufferPoolManager::flush_all_pages(int fd) {
 
     // ref：https://github.com/ruc-deke/rucbase-lab/blob/main/src/storage/buffer_pool_manager.cpp
 }
+void BufferPoolManager::flush_all_pages() {
+    std::scoped_lock lock{latch_};
+    for (const auto& pair : page_table_) {
+        auto page = pair.second + pages_;
+        disk_manager_->write_page(pair.first.fd, pair.first.page_no, page->get_data(), PAGE_SIZE);
+        page->is_dirty_ = false;
+    }
+
+    // ref：https://github.com/ruc-deke/rucbase-lab/blob/main/src/storage/buffer_pool_manager.cpp
+}
 
 void BufferPoolManager::delete_all_pages(int fd) {
     std::scoped_lock lock{latch_};

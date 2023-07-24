@@ -50002,6 +50002,7 @@ insert into d values(49998,'name',1,2,29410.588235);
 insert into d values(49999,'name',1,2,29411.176471);
 insert into d values(50000,'name',1,2,29411.764706);
 update d set test3=6.66 where id>0 and id<10001;
+select * from d where id>0 and id<10001;
 delete from d where test3=6.66 and id<5001;
 insert into d values(50001,'name',1,2,6.66);
 insert into d values(50002,'name',1,2,6.66);
