@@ -41,8 +41,6 @@ class UpdateExecutor : public AbstractExecutor {
     }
     // https://github.com/ruc-deke/rucbase-lab/blob/main/src/execution/executor_update.h
     std::unique_ptr<RmRecord> Next() override {
-        std::deque<WriteRecord *> dq4reverse;
-
         // Update each rid from record file and index file
         for (auto &rid : rids_) {
             auto rec = fh_->get_record(rid, context_);
@@ -64,6 +62,12 @@ class UpdateExecutor : public AbstractExecutor {
                 val.init_raw(lhs_col->len);
                 memcpy(rec->data + lhs_col->offset, val.raw->data, lhs_col->len);
             }
+            // 更新前先写日志
+            auto log_rec = new UpdateLogRecord(context_->txn_->get_transaction_id(), old_rec, *rec, rid, tab_name_);
+            log_rec->prev_lsn_ = context_->txn_->get_prev_lsn();
+            context_->txn_->set_prev_lsn(context_->log_mgr_->add_log_to_buffer(log_rec));
+            fh_->update_page_lsn(rid.page_no, log_rec->lsn_);
+            delete log_rec;
 
             // 判断新数据是否与原有索引重复
             for (size_t i = 0; i < tab_.indexes.size(); ++i) {
@@ -92,16 +96,9 @@ class UpdateExecutor : public AbstractExecutor {
                 delete[] old_key;
                 delete[] new_key;
             }
+
             // Update record in record file
             fh_->update_record(rid, rec->data, context_);
-
-            auto new_rec = new RmRecord(fh_->get_file_hdr().record_size,rec->data);
-            auto log_rec = new UpdateLogRecord(context_->txn_->get_transaction_id(), old_rec,*new_rec,rid, tab_name_);
-            log_rec->prev_lsn_ = context_->txn_->get_prev_lsn();
-            context_->txn_->set_prev_lsn(context_->log_mgr_->add_log_to_buffer(log_rec));
-            fh_->update_page_lsn(rid.page_no, log_rec->lsn_);
-            delete log_rec;
-            delete new_rec;
 
             // 更新索引
             for (size_t i = 0; i < tab_.indexes.size(); ++i) {
@@ -126,10 +123,10 @@ class UpdateExecutor : public AbstractExecutor {
                 delete[] insert_key;
                 delete[] delete_key;
             }
+            // 写入事务记录，等回滚
             WriteRecord *write_rec = new WriteRecord(WType::UPDATE_TUPLE, tab_name_, rid, old_rec);
-            dq4reverse.push_back(write_rec);
+            context_->txn_->append_write_record(write_rec);
         }
-        context_->txn_->append_write_records_reverse(dq4reverse);
         return nullptr;
     }
 

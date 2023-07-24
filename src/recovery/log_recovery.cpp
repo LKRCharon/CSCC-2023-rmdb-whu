@@ -15,7 +15,7 @@ See the Mulan PSL v2 for more details. */
  */
 void RecoveryManager::analyze() {
     //用来从日志文件中读取
-    char* read_buf = new char[LOG_BUFFER_SIZE];
+    char *read_buf = new char[LOG_BUFFER_SIZE];
     // read_buf的偏置
     int buffer_offset = 0;
     //定位文件的偏置
@@ -314,9 +314,10 @@ void RecoveryManager::undo() {
                     log_rec->deserialize(log_buf);
                     std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
                     lsn = log_rec->prev_lsn_;
-                    log_rec->rid_ = sm_manager_->fhs_.at(tab_name)->insert_record(log_rec->delete_value_.data, nullptr);
-                    TabMeta &tab = sm_manager_->db_.get_table(tab_name);
 
+                    sm_manager_->fhs_.at(tab_name)->insert_record(log_rec->rid_, log_rec->delete_value_.data);
+
+                    TabMeta &tab = sm_manager_->db_.get_table(tab_name);
                     for (size_t i = 0; i < tab.indexes.size(); ++i) {
                         auto &index = tab.indexes.at(i);
                         auto ih =

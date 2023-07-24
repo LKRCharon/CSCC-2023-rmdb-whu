@@ -273,6 +273,7 @@ with open("aadebugsql/single_thread_recovery/little_buffer.sql", "w") as file:
 with open("aadebugsql/single_thread_recovery/index_test.sql", "w") as file:
     file.write('create table d (id int, name char(16),test bigint,test2 bigint,test3 float);\n');
     file.write('create index d(id);\n')
+
     file.write('begin;\n');
     for id in range(1,50001):
         file.write(f"insert into d values({id},'name',1,2,{id/1.7:.6f});\n");#插5w
@@ -282,7 +283,9 @@ with open("aadebugsql/single_thread_recovery/index_test.sql", "w") as file:
     for id in range(50001,60001):
         file.write(f"insert into d values({id},'name',1,2,6.66);\n");#再插1w
     file.write('commit;\n');
+
     file.write('select * from d where id>0;\n');
+    
     file.write('begin;\n');
     file.write("update d set test3=8.88 where id>0 and id<60001;\n")#5.5w条全部更新
     file.write("delete from d where test3=8.88;\n");#全部删除    
