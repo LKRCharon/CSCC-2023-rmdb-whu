@@ -15,6 +15,7 @@ See the Mulan PSL v2 for more details. */
 #include "log_manager.h"
 #include "storage/disk_manager.h"
 #include "system/sm_manager.h"
+#include "transaction/transaction_manager.h"
 
 class RedoLogsInPage {
    public:
@@ -26,11 +27,12 @@ class RedoLogsInPage {
 class RecoveryManager {
    public:
     RecoveryManager(DiskManager* disk_manager, BufferPoolManager* buffer_pool_manager, SmManager* sm_manager,
-                    LogManager* log_manager) {
+                    LogManager* log_manager, TransactionManager* txn_manager) {
         disk_manager_ = disk_manager;
         bpm_ = buffer_pool_manager;
         sm_manager_ = sm_manager;
         log_manager_ = log_manager;
+        txn_manager_ = txn_manager;
     }
 
     void analyze();
@@ -42,9 +44,10 @@ class RecoveryManager {
     DiskManager* disk_manager_;                      // 用来读写文件
     BufferPoolManager* bpm_;                         // 对页面进行读写
     SmManager* sm_manager_;                          // 访问数据库元数据
+    LogManager* log_manager_;                        //用来维护全局的lsn
+    TransactionManager* txn_manager_;                //用来维护txn id
     std::unordered_map<lsn_t, int> lsn_offsets_;     // 记录lsn与offset
     std::unordered_map<lsn_t, int> log_lens_;        // 记录每个log的size
     std::unordered_map<txn_id_t, lsn_t> undo_lsns_;  // 需要undo的事务的最后一条lsn   ATT
     std::vector<lsn_t> redo_logs_;                   // 需要redo的log集合 DPT
-    LogManager* log_manager_;                        //用来维护全局的lsn
 };

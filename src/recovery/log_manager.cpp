@@ -51,5 +51,5 @@ void LogManager::flush_log_to_disk() {
     log_buffer_.offset_ = 0;
 }
 
-void LogManager::set_global_lsn_(lsn_t lsn) { global_lsn_.store(lsn); };
+void LogManager::set_global_lsn_(lsn_t lsn) { global_lsn_.store(++lsn); };
 void LogManager::set_persist_lsn_(lsn_t lsn) { persist_lsn_ = lsn; };

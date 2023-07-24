@@ -48,6 +48,7 @@ void RecoveryManager::analyze() {
                     buffer_offset += log_rec->log_tot_len_;
                     file_offset += log_rec->log_tot_len_;
                     undo_lsns_[log_rec->log_tid_] = log_rec->lsn_;
+                    txn_manager_->set_next_txn_id(log_rec->log_tid_);
                     log_manager_->set_global_lsn_(log_rec->lsn_);
                     delete log_rec;
                     break;
@@ -60,6 +61,8 @@ void RecoveryManager::analyze() {
                     buffer_offset += log_rec->log_tot_len_;
                     file_offset += log_rec->log_tot_len_;
                     undo_lsns_.erase(log_rec->log_tid_);
+                    txn_manager_->set_next_txn_id(log_rec->log_tid_);
+
                     log_manager_->set_global_lsn_(log_rec->lsn_);
                     delete log_rec;
                     break;
@@ -72,6 +75,8 @@ void RecoveryManager::analyze() {
                     buffer_offset += log_rec->log_tot_len_;
                     file_offset += log_rec->log_tot_len_;
                     undo_lsns_.erase(log_rec->log_tid_);
+                    txn_manager_->set_next_txn_id(log_rec->log_tid_);
+
                     log_manager_->set_global_lsn_(log_rec->lsn_);
                     delete log_rec;
                     break;
@@ -85,6 +90,8 @@ void RecoveryManager::analyze() {
                     file_offset += log_rec->log_tot_len_;
                     undo_lsns_[log_rec->log_tid_] = log_rec->lsn_;
                     redo_logs_.push_back(log_rec->lsn_);
+                    txn_manager_->set_next_txn_id(log_rec->log_tid_);
+
                     log_manager_->set_global_lsn_(log_rec->lsn_);
                     delete log_rec;
                     break;
@@ -98,6 +105,8 @@ void RecoveryManager::analyze() {
                     file_offset += log_rec->log_tot_len_;
                     undo_lsns_[log_rec->log_tid_] = log_rec->lsn_;
                     redo_logs_.push_back(log_rec->lsn_);
+                    txn_manager_->set_next_txn_id(log_rec->log_tid_);
+
                     log_manager_->set_global_lsn_(log_rec->lsn_);
                     delete log_rec;
                     break;
@@ -111,6 +120,8 @@ void RecoveryManager::analyze() {
                     file_offset += log_rec->log_tot_len_;
                     undo_lsns_[log_rec->log_tid_] = log_rec->lsn_;
                     redo_logs_.push_back(log_rec->lsn_);
+                    txn_manager_->set_next_txn_id(log_rec->log_tid_);
+
                     log_manager_->set_global_lsn_(log_rec->lsn_);
                     delete log_rec;
                     break;
