@@ -61,6 +61,8 @@ class SmManager {
 
     void close_db();
 
+    void reset_db();
+
     void flush_meta();
 
     void show_tables(Context* context);

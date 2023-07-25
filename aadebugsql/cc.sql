@@ -23,4 +23,4 @@ select * from concurrency_test where id = 2;
 commit;
 
 操作序列：t1a t2a t1b t2b t1c t1d
- 
+2020-11-09 11:11:11

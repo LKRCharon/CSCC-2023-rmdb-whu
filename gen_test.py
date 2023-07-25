@@ -1,3 +1,10 @@
+import random
+import string
+def generate_random_string(length):
+    letters = string.ascii_letters + string.digits
+    result_str = ''.join(random.choice(letters) for _ in range(length))
+    return result_str
+
 with open("aadebugsql/index/txn1.sql", "w") as file:
     file.write('create table d (id int, name char(16),test bigint,test2 bigint,test3 float);\n');
     file.write('create index d(id);\n');
@@ -290,4 +297,14 @@ with open("aadebugsql/single_thread_recovery/index_test.sql", "w") as file:
     file.write("update d set test3=8.88 where id>0 and id<60001;\n")#5.5w条全部更新
     file.write("delete from d where test3=8.88;\n");#全部删除    
     file.write('crash\n');#回滚
-    
+
+with open("aadebugsql/single_thread_recovery/datetimechar.sql", "w") as file:
+    file.write('create table d (id int,time datetime, name char(30),str char(30));\n');
+    file.write('create index d(id);\n')
+
+    file.write('begin;\n');
+    for id in range(1,50001):
+        random_string = generate_random_string(30)
+        file.write(f"insert into d values({id},'2023-07-0{id%9+1} 18:42:00','{random_string}','{random_string}');\n");#插5w
+    file.write('commit;\n');
+    file.write('select * from d where id>0;\n');

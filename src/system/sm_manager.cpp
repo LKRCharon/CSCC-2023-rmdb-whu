@@ -481,3 +481,31 @@ void SmManager::rollback_update(const std::string& tab_name, const Rid& rid, con
         delete[] delete_key;
     }
 }
+
+// 把表和索引全删了，再新建新的
+void SmManager::reset_db() {
+    for (auto& tab : db_.tabs_) {
+        auto tab_name = tab.first;
+        TabMeta& tab_meta = db_.get_table(tab_name);
+        for (auto& index : tab_meta.indexes) {
+            drop_index(tab_name, index.cols, nullptr);
+        }
+        auto file_handle_iter = fhs_.find(tab_name);
+        rm_manager_->close_file(file_handle_iter->second.get());
+        rm_manager_->destroy_file(tab_name);
+        fhs_.erase(tab_name);
+
+        int curr_offset = 0;
+        for (auto& col : tab_meta.cols) {
+            curr_offset += col.len;
+        }
+        rm_manager_->create_file(tab_name, curr_offset);
+        fhs_.emplace(tab_name, rm_manager_->open_file(tab_name));
+        for (auto& index : tab_meta.indexes) {
+            ix_manager_->create_index(tab_name, index.cols);
+            auto index_handle = ix_manager_->open_index(tab_name, index.cols);
+            auto index_name = ix_manager_->get_index_name(tab_name, index.cols);
+            ihs_.emplace(index_name, std::move(index_handle));
+        }
+    }
+}

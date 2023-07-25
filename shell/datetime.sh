@@ -1,0 +1,1 @@
+../rmdb_client/build/rmdb_client < ../aadebugsql/single_thread_recovery/datetimechar.sql
