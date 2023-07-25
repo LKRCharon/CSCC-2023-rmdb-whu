@@ -28,6 +28,7 @@ See the Mulan PSL v2 for more details. */
 #define MAX_CONN_LIMIT 8
 
 static bool should_exit = false;
+static bool need_output = true;
 
 // 构建全局所需的管理器对象
 auto disk_manager = std::make_unique<DiskManager>();
@@ -107,6 +108,10 @@ void *client_handler(void *sock_fd) {
             break;
         }
         if (strcmp(data_recv, "crash") == 0) {
+            std::cout << "Server crash" << std::endl;
+            exit(1);
+        }
+        if (strcmp(data_recv, "set output_file off") == 0) {
             std::cout << "Server crash" << std::endl;
             exit(1);
         }
