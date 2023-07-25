@@ -33,8 +33,6 @@ class SeqScanExecutor : public AbstractExecutor {
     SmManager *sm_manager_;
 
    public:
-
-
     SeqScanExecutor(SmManager *sm_manager, std::string tab_name, std::vector<Condition> conds, Context *context) {
         sm_manager_ = sm_manager;
         tab_name_ = std::move(tab_name);
@@ -64,11 +62,12 @@ class SeqScanExecutor : public AbstractExecutor {
     }
 
     std::string GetTableName() { return tab_name_; }
+
     std::string getType() override { return "SeqScan"; }
-    RmFileHandle *GetFileHandle() override { return fh_; }
-    const std::vector<Condition> get_conds() override{
-        return fed_conds_;
-    }
+
+    RmFileHandle *GetFileHandle() { return fh_; }
+
+    const std::vector<Condition> get_conds() override { return fed_conds_; }
 
     /**
      * @brief 构建表迭代器scan_,并开始迭代扫描,直到扫描到第一个满足谓词条件的元组停止,并赋值给rid_
@@ -207,5 +206,4 @@ class SeqScanExecutor : public AbstractExecutor {
         return std::all_of(conds.begin(), conds.end(),
                            [&](const Condition &cond) { return eval_cond(rec_cols, cond, rec); });
     }
-
 };

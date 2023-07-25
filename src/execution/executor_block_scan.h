@@ -11,7 +11,7 @@ See the Mulan PSL v2 for more details. */
 #pragma once
 #include "execution_defs.h"
 #include "execution_manager.h"
-#include "executor_abstract.h"
+#include "executor_seq_scan.h"
 #include "index/ix.h"
 #include "record/rm_file_handle.h"
 #include "system/sm.h"
@@ -91,7 +91,7 @@ class BlockBufferManager {
 // 封装左右孩子的scan算子，
 class BlockScanner {
    private:
-    std::unique_ptr<AbstractExecutor> scanner_;
+    SeqScanExecutor* scanner_;
     RmFileHdr file_hdr_;
     Page *pages_;
     int size_;
@@ -103,8 +103,9 @@ class BlockScanner {
     bool is_buffer_end = false;
 
    public:
-    BlockScanner(std::unique_ptr<AbstractExecutor> scanner, Page *pages, int size) : pages_(pages), size_(size) {
-        scanner_ = std::move(scanner);
+    BlockScanner(SeqScanExecutor* scanner, Page *pages, int size) : pages_(pages), size_(size) {
+        // scanner_ = std::move(scanner);
+        scanner_ = scanner;
         file_hdr_ = scanner_->GetFileHandle()->get_file_hdr();
         bbm_ = new BlockBufferManager(scanner_->GetFileHandle(), pages, size);
         max_n_ = file_hdr_.num_records_per_page;
