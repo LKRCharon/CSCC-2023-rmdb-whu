@@ -13,10 +13,12 @@ See the Mulan PSL v2 for more details. */
 #include <cerrno>
 #include <cstring>
 #include <string>
+
 #include "common/common.h"
 #include "common/config.h"
 #include "execution/execution_sort.h"
 #include "execution/executor_abstract.h"
+#include "execution/executor_aggregate.h"
 #include "execution/executor_delete.h"
 #include "execution/executor_index_scan.h"
 #include "execution/executor_insert.h"
@@ -31,9 +33,11 @@ See the Mulan PSL v2 for more details. */
 typedef enum portalTag {
     PORTAL_Invalid_Query = 0,
     PORTAL_ONE_SELECT,
+    PORTAL_AGG_SELECT,
     PORTAL_DML_WITHOUT_SELECT,
     PORTAL_MULTI_QUERY,
-    PORTAL_CMD_UTILITY
+    PORTAL_CMD_UTILITY,
+    PORTAL_LOAD
 } portalTag;
 
 struct PortalStmt {
@@ -62,16 +66,24 @@ class Portal {
         if (auto x = std::dynamic_pointer_cast<OtherPlan>(plan)) {
             return std::make_shared<PortalStmt>(PORTAL_CMD_UTILITY, std::vector<TabCol>(),
                                                 std::unique_ptr<AbstractExecutor>(), plan);
+        } else if (auto x = std::dynamic_pointer_cast<LoadPlan>(plan)) {
+            return std::make_shared<PortalStmt>(PORTAL_LOAD, std::vector<TabCol>(), std::unique_ptr<AbstractExecutor>(),
+                                                plan);
         } else if (auto x = std::dynamic_pointer_cast<DDLPlan>(plan)) {
             return std::make_shared<PortalStmt>(PORTAL_MULTI_QUERY, std::vector<TabCol>(),
                                                 std::unique_ptr<AbstractExecutor>(), plan);
         } else if (auto x = std::dynamic_pointer_cast<DMLPlan>(plan)) {
             switch (x->tag) {
                 case T_select: {
-                    std::shared_ptr<ProjectionPlan> p = std::dynamic_pointer_cast<ProjectionPlan>(x->subplan_);
-                    std::unique_ptr<AbstractExecutor> root = convert_plan_executor(p, context);
-                    return std::make_shared<PortalStmt>(PORTAL_ONE_SELECT, std::move(p->sel_cols_), std::move(root),
-                                                        plan);
+                    if (auto p = std::dynamic_pointer_cast<ProjectionPlan>(x->subplan_)) {
+                        std::unique_ptr<AbstractExecutor> root = convert_plan_executor(p, context);
+                        return std::make_shared<PortalStmt>(PORTAL_ONE_SELECT, std::move(p->sel_cols_), std::move(root),
+                                                            plan);
+                    } else if (auto p = std::dynamic_pointer_cast<AggregatePlan>(x->subplan_)) {
+                        std::unique_ptr<AbstractExecutor> root = convert_plan_executor(p, context);
+                        return std::make_shared<PortalStmt>(PORTAL_AGG_SELECT, std::move(p->sel_cols_), std::move(root),
+                                                            plan);
+                    }
                 }
 
                 case T_Update: {
@@ -126,6 +138,11 @@ class Portal {
                 break;
             }
 
+            case PORTAL_AGG_SELECT: {
+                ql->agg_select_from(std::move(portal->root), std::move(portal->sel_cols), context);
+                break;
+            }
+
             case PORTAL_DML_WITHOUT_SELECT: {
                 ql->run_dml(std::move(portal->root));
                 break;
@@ -138,7 +155,13 @@ class Portal {
                 ql->run_cmd_utility(portal->plan, txn_id, context);
                 break;
             }
-            default: { throw InternalError("Unexpected field type"); }
+            case PORTAL_LOAD: {
+                ql->run_load_data(portal->plan, context);
+                break;
+            }
+            default: {
+                throw InternalError("Unexpected field type");
+            }
         }
     }
 
@@ -178,6 +201,9 @@ class Portal {
         } else if (auto x = std::dynamic_pointer_cast<SortPlan>(plan)) {
             return std::make_unique<SortExecutor>(convert_plan_executor(x->subplan_, context), x->sel_col_, x->is_desc_,
                                                   x->limit_);
+        } else if (auto x = std::dynamic_pointer_cast<AggregatePlan>(plan)) {
+            return std::make_unique<AggregateExecutor>(convert_plan_executor(x->subplan_, context), x->sel_cols_,
+                                                       x->aggType_, x->asName_);
         }
         return nullptr;
     }

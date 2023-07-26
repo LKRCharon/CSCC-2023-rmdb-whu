@@ -21,13 +21,13 @@ using namespace ast;
 %define parse.error verbose
 
 // keywords
-%token SHOW TABLES CREATE TABLE DROP DESC INSERT INTO VALUES DELETE FROM ASC ORDER BY LIMIT
+%token SHOW TABLES CREATE TABLE DROP DESC INSERT INTO VALUES DELETE FROM ASC COUNT MAX MIN SUM ORDER BY LIMIT AS LOAD
 WHERE UPDATE SET SELECT INT BIGINT CHAR FLOAT DATETIME INDEX AND JOIN EXIT HELP TXN_BEGIN TXN_COMMIT TXN_ABORT TXN_ROLLBACK ORDER_BY
 // non-keywords
 %token LEQ NEQ GEQ T_EOF
 
 // type-specific tokens
-%token <sv_str> IDENTIFIER VALUE_STRING
+%token <sv_str> IDENTIFIER VALUE_STRING PATH
 %token <sv_int> VALUE_INT
 %token <sv_float> VALUE_FLOAT
 
@@ -40,16 +40,17 @@ WHERE UPDATE SET SELECT INT BIGINT CHAR FLOAT DATETIME INDEX AND JOIN EXIT HELP 
 %type <sv_expr> expr
 %type <sv_val> value
 %type <sv_vals> valueList
-%type <sv_str> tbName colName
+%type <sv_str> tbName colName asName fileName
 %type <sv_strs> tableList colNameList
 %type <sv_col> col
-%type <sv_cols> colList selector
+%type <sv_cols> colList selector singleSelector
 %type <sv_set_clause> setClause
 %type <sv_set_clauses> setClauses
 %type <sv_cond> condition
 %type <sv_conds> whereClause optWhereClause
 %type <sv_orderby>  order_clause opt_order_clause
 %type <sv_orderby_dir> opt_asc_desc
+%type <sv_aggtype> aggType countType
 %type <sv_limit> optLimitClause
 
 %%
@@ -152,6 +153,45 @@ dml:
     |   SELECT selector FROM tableList optWhereClause opt_order_clause optLimitClause 
     {
         $$ = std::make_shared<SelectStmt>($2, $4, $5, $6,$7);
+    }
+    |   SELECT countType '(' selector ')' AS asName FROM tableList optWhereClause opt_order_clause optLimitClause
+    {
+        $$ = std::make_shared<SelectStmt>($2, $7, $4, $9, $10);
+    }
+    |   SELECT aggType '(' singleSelector ')' AS asName FROM tableList optWhereClause opt_order_clause optLimitClause
+    {
+        $$ = std::make_shared<SelectStmt>($2, $7, $4, $9, $10);
+    }
+    |   LOAD fileName INTO tbName 
+    {
+        $$ = std::make_shared<LoadData>($2, $4);
+    }
+    ;
+
+countType:
+        COUNT
+    {
+        $$ = AGGTYPE_COUNT;
+    }
+    ;
+aggType:
+       MAX
+    {
+        $$ = AGGTYPE_MAX;
+    }
+    |   MIN
+    {
+        $$ = AGGTYPE_MIN;
+    }
+    |   SUM
+    {
+        $$ = AGGTYPE_SUM;
+    }
+
+singleSelector:
+       col
+    {
+        $$ = std::vector<std::shared_ptr<Col>>{$1};
     }
     ;
 
@@ -399,4 +439,8 @@ optLimitClause:
 tbName: IDENTIFIER;
 
 colName: IDENTIFIER;
+
+asName: IDENTIFIER;
+
+fileName: PATH;
 %%

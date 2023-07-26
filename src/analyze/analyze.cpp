@@ -21,11 +21,11 @@ std::shared_ptr<Query> Analyze::do_analyze(std::shared_ptr<ast::TreeNode> parse)
         // 处理表名
         query->tables = std::move(x->tabs);
         /** TODO: 检查表是否存在 */
-        for (auto &table : query->tables){
+        for (auto &table : query->tables) {
             bool is_table = sm_manager_->db_.is_table(table);
-            if(!is_table){
+            if (!is_table) {
                 throw TableNotFoundError(table);
-            }    
+            }
         }
 
         // 处理target list，再target list中添加上表名，例如 a.id
@@ -48,12 +48,19 @@ std::shared_ptr<Query> Analyze::do_analyze(std::shared_ptr<ast::TreeNode> parse)
                 sel_col = check_column(all_cols, sel_col);  // 列元数据校验
             }
         }
-        //处理where条件
+        // 处理where条件
         get_clause(x->conds, query->conds);
         check_clause(query->tables, query->conds);
+
+        // 处理agg
+        if (x->aggType != ast::AGGTYPE_NONE) {
+            query->aggType = x->aggType;
+            query->asName = x->asName;
+        }
+
     } else if (auto x = std::dynamic_pointer_cast<ast::UpdateStmt>(parse)) {
         /** TODO: */
-        //处理where条件
+        // 处理where条件
 
         get_clause(x->conds, query->conds);
         check_clause({x->tab_name}, query->conds);
@@ -69,7 +76,7 @@ std::shared_ptr<Query> Analyze::do_analyze(std::shared_ptr<ast::TreeNode> parse)
         }
 
     } else if (auto x = std::dynamic_pointer_cast<ast::DeleteStmt>(parse)) {
-        //处理where条件
+        // 处理where条件
         get_clause(x->conds, query->conds);
         check_clause({x->tab_name}, query->conds);
     } else if (auto x = std::dynamic_pointer_cast<ast::InsertStmt>(parse)) {

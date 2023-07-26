@@ -41,6 +41,8 @@ value_int {sign}?{digit}+
 value_float {sign}?{digit}+\.({digit}+)?
 value_string '[^']*'
 single_op ";"|"("|")"|","|"*"|"="|">"|"<"|"."
+path_part ".."|"."|[a-zA-Z0-9_]+
+path ({path_part}"/")+{identifier}".csv"
 
 %x STATE_COMMENT
 
@@ -89,6 +91,13 @@ single_op ";"|"("|")"|","|"*"|"="|">"|"<"|"."
 "BY" {  return BY;  }
 "ASC" { return ASC; }
 "LIMIT" { return LIMIT; }
+"AS" {return AS; }
+"COUNT" {return COUNT; }
+"MAX" {return MAX; }
+"MIN" {return MIN; }
+"SUM" {return SUM; }
+"LOAD" {return LOAD; }
+
     /* operators */
 ">=" { return GEQ; }
 "<=" { return LEQ; }
@@ -99,6 +108,12 @@ single_op ";"|"("|")"|","|"*"|"="|">"|"<"|"."
     yylval->sv_str = yytext;
     return IDENTIFIER;
 }
+
+{path} {
+    yylval->sv_str = yytext;
+    return PATH;
+}
+
     /* literals */
 {value_int} {
     // yylval->sv_int = atoi(yytext);

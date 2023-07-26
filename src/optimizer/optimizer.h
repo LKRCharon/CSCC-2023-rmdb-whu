@@ -12,14 +12,14 @@ See the Mulan PSL v2 for more details. */
 
 #include <map>
 
+#include "common/context.h"
 #include "errors.h"
 #include "execution/execution.h"
 #include "parser/parser.h"
-#include "system/sm.h"
-#include "common/context.h"
-#include "transaction/transaction_manager.h"
-#include "planner.h"
 #include "plan.h"
+#include "planner.h"
+#include "system/sm.h"
+#include "transaction/transaction_manager.h"
 
 class Optimizer {
    private:
@@ -27,10 +27,8 @@ class Optimizer {
     Planner *planner_;
 
    public:
-    Optimizer(SmManager *sm_manager,  Planner *planner) 
-        : sm_manager_(sm_manager),  planner_(planner)
-        {}
-    
+    Optimizer(SmManager *sm_manager, Planner *planner) : sm_manager_(sm_manager), planner_(planner) {}
+
     std::shared_ptr<Plan> plan_query(std::shared_ptr<Query> query, Context *context) {
         if (auto x = std::dynamic_pointer_cast<ast::Help>(query->parse)) {
             // help;
@@ -56,9 +54,11 @@ class Optimizer {
         } else if (auto x = std::dynamic_pointer_cast<ast::TxnRollback>(query->parse)) {
             // rollback;
             return std::make_shared<OtherPlan>(T_Transaction_rollback, std::string());
+        } else if (auto x = std::dynamic_pointer_cast<ast::LoadData>(query->parse)) {
+            // load data;
+            return std::make_shared<LoadPlan>(T_LoadData, x->file_path, x->tab_name);
         } else {
             return planner_->do_planner(query, context);
         }
     }
-
 };

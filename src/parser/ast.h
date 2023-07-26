@@ -22,6 +22,8 @@ enum SvCompOp { SV_OP_EQ, SV_OP_NE, SV_OP_LT, SV_OP_GT, SV_OP_LE, SV_OP_GE };
 
 enum OrderByDir { OrderBy_DEFAULT, OrderBy_ASC, OrderBy_DESC };
 
+enum AggType { AGGTYPE_NONE, AGGTYPE_COUNT, AGGTYPE_MAX, AGGTYPE_MIN, AGGTYPE_SUM };
+
 // Base class for tree nodes
 struct TreeNode {
     virtual ~TreeNode() = default;  // enable polymorphism
@@ -35,6 +37,14 @@ struct ShowIndex : public TreeNode {
     std::string tab_name;
 
     ShowIndex(std::string tab_name_) : tab_name(std::move(tab_name_)) {}
+};
+
+struct LoadData : public TreeNode {
+    std::string file_path;
+    std::string tab_name;
+
+    LoadData(std::string file_path_, std::string tab_name_)
+        : file_path(std::move(file_path_)), tab_name(std::move(tab_name_)) {}
 };
 
 struct TxnBegin : public TreeNode {};
@@ -128,6 +138,7 @@ struct StringLit : public Value {
 struct Col : public Expr {
     std::string tab_name;
     std::string col_name;
+    AggType agg_type;
 
     Col(std::string tab_name_, std::string col_name_)
         : tab_name(std::move(tab_name_)), col_name(std::move(col_name_)) {}
@@ -199,6 +210,9 @@ struct SelectStmt : public TreeNode {
     std::vector<std::shared_ptr<BinaryExpr>> conds;
     std::vector<std::shared_ptr<JoinExpr>> jointree;
 
+    AggType aggType = AGGTYPE_NONE;  // 补充了2个属性 byxjc
+    std::string asName;
+
     bool has_sort;
     std::vector<std::shared_ptr<OrderBy>> order;
     int limit;
@@ -212,6 +226,15 @@ struct SelectStmt : public TreeNode {
           limit(std::move(limit_)) {
         has_sort = order.size() > 0;
     }
+
+    SelectStmt(AggType aggType_, std::string asName_, std::vector<std::shared_ptr<Col>> cols_,
+               std::vector<std::string> tabs_,  // 重载了一个构造函数 byxjc
+               std::vector<std::shared_ptr<BinaryExpr>> conds_)
+        : aggType(std::move(aggType_)),
+          asName(std::move(asName_)),
+          cols(std::move(cols_)),
+          tabs(std::move(tabs_)),
+          conds(std::move(conds_)) {}
 };
 
 // Semantic value
@@ -251,6 +274,8 @@ struct SemValue {
     std::vector<std::shared_ptr<OrderBy>> sv_orderby;
 
     int sv_limit;
+
+    AggType sv_aggtype;
 };
 
 extern std::shared_ptr<ast::TreeNode> parse_tree;

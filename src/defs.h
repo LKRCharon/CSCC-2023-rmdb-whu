@@ -70,7 +70,9 @@ typedef enum PlanTag {
     T_IndexScan,
     T_NestLoop,
     T_Sort,
-    T_Projection
+    T_Projection,
+    T_Aggregate,
+    T_LoadData
 } PlanTag;
 inline std::string plantag2str(PlanTag tag) {
     std::map<PlanTag, std::string> m = {{T_Invalid, "Invalid"},
@@ -94,7 +96,8 @@ inline std::string plantag2str(PlanTag tag) {
                                         {T_IndexScan, "IndexScan"},
                                         {T_NestLoop, "NestLoop"},
                                         {T_Sort, "Sort"},
-                                        {T_Projection, "Projection"}};
+                                        {T_Projection, "Projection"},
+                                        {T_Aggregate, "AggregatePlan"}};
     return m.at(tag);
 }
 

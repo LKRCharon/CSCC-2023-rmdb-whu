@@ -268,7 +268,7 @@ std::shared_ptr<Plan> Planner::make_one_rel(std::shared_ptr<Query> query) {
             left = pop_scan(scantbl, it->lhs_col.tab_name, joined_tables, table_scan_executors);
             right = pop_scan(scantbl, it->rhs_col.tab_name, joined_tables, table_scan_executors);
             std::vector<Condition> join_conds{*it};
-            //建立join
+            // 建立join
             table_join_executors =
                 std::make_shared<JoinPlan>(T_NestLoop, std::move(left), std::move(right), join_conds);
             it = conds.erase(it);
@@ -320,7 +320,7 @@ std::shared_ptr<Plan> Planner::make_one_rel(std::shared_ptr<Query> query) {
         scantbl[0] = 1;
     }
 
-    //连接剩余表
+    // 连接剩余表
     for (size_t i = 0; i < tables.size(); i++) {
         if (scantbl[i] == -1) {
             table_join_executors =
@@ -366,10 +366,10 @@ std::shared_ptr<Plan> Planner::generate_sort_plan(std::shared_ptr<Query> query, 
  * @param conds select plan 选取条件
  */
 std::shared_ptr<Plan> Planner::generate_select_plan(std::shared_ptr<Query> query, Context *context) {
-    //逻辑优化
+    // 逻辑优化
     query = logical_optimization(std::move(query), context);
 
-    //物理优化
+    // 物理优化
     auto sel_cols = query->cols;
     std::shared_ptr<Plan> plannerRoot = physical_optimization(query, context);
     plannerRoot = std::make_shared<ProjectionPlan>(T_Projection, std::move(plannerRoot), std::move(sel_cols));
@@ -453,11 +453,26 @@ std::shared_ptr<Plan> Planner::do_planner(std::shared_ptr<Query> query, Context 
         plannerRoot = std::make_shared<DMLPlan>(T_Update, table_scan_executors, x->tab_name, std::vector<Value>(),
                                                 query->conds, query->set_clauses);
     } else if (auto x = std::dynamic_pointer_cast<ast::SelectStmt>(query->parse)) {
-        std::shared_ptr<plannerInfo> root = std::make_shared<plannerInfo>(x);
-        // 生成select语句的查询执行计划
-        std::shared_ptr<Plan> projection = generate_select_plan(std::move(query), context);
-        plannerRoot = std::make_shared<DMLPlan>(T_select, projection, std::string(), std::vector<Value>(),
-                                                std::vector<Condition>(), std::vector<SetClause>());
+        if (x->aggType == ast::AGGTYPE_NONE) {  // 在这里分开，如果没有agg的话，root就是projection，否则root为agg
+            std::shared_ptr<plannerInfo> root = std::make_shared<plannerInfo>(x);
+            // 生成select语句的查询执行计划
+            std::shared_ptr<Plan> projection =
+                generate_select_plan(std::move(query), context);  // 这里需要修改，否则query的aggtype会消失 byxjc
+            plannerRoot = std::make_shared<DMLPlan>(T_select, projection, std::string(), std::vector<Value>(),
+                                                    std::vector<Condition>(), std::vector<SetClause>());
+        } else {
+            auto sel_cols = query->cols;
+            std::shared_ptr<Plan> projection = generate_select_plan(std::move(query), context);
+            TabCol col = sel_cols[0];
+            col.col_name = x->asName;
+            std::vector<TabCol> agg_cols;
+            agg_cols.push_back(col);
+            std::shared_ptr<Plan> aggregation = std::make_shared<AggregatePlan>(
+                T_Aggregate, std::move(projection), std::move(agg_cols), std::move(x->aggType), std::move(x->asName));
+            plannerRoot = std::make_shared<DMLPlan>(T_select, aggregation, std::string(), std::vector<Value>(),
+                                                    std::vector<Condition>(), std::vector<SetClause>());
+        }
+
     } else {
         throw InternalError("Unexpected AST root");
     }

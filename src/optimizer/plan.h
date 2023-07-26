@@ -106,6 +106,22 @@ class ProjectionPlan : public Plan {
     std::shared_ptr<Plan> subplan_;
     std::vector<TabCol> sel_cols_;
 };
+class AggregatePlan : public Plan {
+   public:
+    AggregatePlan(PlanTag tag, std::shared_ptr<Plan> subplan, std::vector<TabCol> sel_cols, ast::AggType aggType,
+                  std::string asName) {
+        Plan::tag = tag;
+        subplan_ = std::move(subplan);
+        sel_cols_ = std::move(sel_cols);
+        aggType_ = std::move(aggType);
+        asName_ = std::move(asName);
+    }
+    ~AggregatePlan() {}
+    std::shared_ptr<Plan> subplan_;
+    std::vector<TabCol> sel_cols_;
+    ast::AggType aggType_;
+    std::string asName_;
+};
 
 class SortPlan : public Plan {
    public:
@@ -176,6 +192,18 @@ class OtherPlan : public Plan {
         tab_name_ = std::move(tab_name);
     }
     ~OtherPlan() {}
+    std::string tab_name_;
+};
+
+class LoadPlan : public Plan {
+   public:
+    LoadPlan(PlanTag tag, std::string file_name, std::string tab_name) {
+        Plan::tag = tag;
+        file_name_ = std::move(file_name);
+        tab_name_ = std::move(tab_name);
+    }
+    ~LoadPlan() {}
+    std::string file_name_;
     std::string tab_name_;
 };
 

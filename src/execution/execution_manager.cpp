@@ -9,7 +9,13 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details. */
 
 #include "execution_manager.h"
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
 #include "common/config.h"
+#include "executor_aggregate.h"
 #include "executor_delete.h"
 #include "executor_index_scan.h"
 #include "executor_insert.h"
@@ -121,6 +127,108 @@ void QlManager::run_cmd_utility(std::shared_ptr<Plan> plan, txn_id_t *txn_id, Co
     }
 }
 
+void QlManager::run_load_data(std::shared_ptr<Plan> plan, Context *context) {
+    if (auto x = std::dynamic_pointer_cast<LoadPlan>(plan)) {
+        // 获取数据库的表
+        TabMeta &tab_ = sm_manager_->db_.get_table(x->tab_name_);
+        RmFileHandle *fh_ = sm_manager_->fhs_.at(x->tab_name_).get();
+        Context *context_ = context;
+        Rid rid_;
+        // 不知道需不需要加锁也不知道要不要加锁，先注释掉得了
+        //  context_->lock_mgr_->lock_IX_on_table(context_->txn_, fh_->GetFd());
+
+        std::vector<ColType> type_list;
+        std::vector<int> len_list;
+        std::vector<int> offset_list;
+
+        // 打开csv文件
+        std::ifstream inFile(x->file_name_);
+
+        std::string lineStr;
+
+        int is_header = 1;
+
+        while (getline(inFile, lineStr)) {
+            if (!lineStr.empty() && lineStr.back() == '\r') {
+                lineStr.pop_back();
+            }
+            std::stringstream ss(lineStr);
+            std::string str;
+            std::vector<std::string> lineArray;
+            while (getline(ss, str, ',')) {
+                lineArray.push_back(str);
+            }
+
+            if (is_header) {  // 头部进行判断
+                is_header = 0;
+
+                if (lineArray.size() != tab_.cols.size()) {
+                    throw LoadNotMatchError();
+                }
+
+                for (size_t i = 0; i < tab_.cols.size(); i++) {
+                    type_list.push_back(tab_.cols[i].type);
+                    len_list.push_back(tab_.cols[i].len);
+                    offset_list.push_back(tab_.cols[i].offset);
+
+                    if (lineArray[i] != tab_.cols[i].name) {
+                        throw LoadNotMatchError();
+                    }
+                }
+                continue;
+            } else {
+                RmRecord rec(fh_->get_file_hdr().record_size);
+                for (size_t i = 0; i < tab_.cols.size(); i++) {
+                    Value value;
+                    if (type_list[i] == TYPE_INT) {
+                        int data = std::stoi(lineArray[i]);
+                        value.set_int(data);
+                    } else if (type_list[i] == TYPE_BIGINT) {
+                        long long data = std::stoll(lineArray[i]);
+                        value.set_int(data);
+                    } else if (type_list[i] == TYPE_FLOAT) {
+                        double data = std::stod(lineArray[i]);
+                        value.set_float(data);
+                    } else if (type_list[i] == TYPE_DATETIME) {
+                        long long data = DatetimeStrToLL(lineArray[i]);
+                        value.set_datetime(data);
+                    } else {
+                        // if (lineArray[i].length() > len_list[i]) {
+                        //     value.set_str(lineArray[i].substr(0, len_list[i]));
+                        // } else {
+                        //     value.set_str(lineArray[i]);
+                        // }
+                        value.set_str(lineArray[i]);
+                    }
+                    value.init_raw(len_list[i]);
+                    memcpy(rec.data + offset_list[i], value.raw->data, len_list[i]);
+                }
+                rid_ = fh_->insert_record(rec.data, context_);
+
+                // 索引，从insert复制过来的
+                for (size_t i = 0; i < tab_.indexes.size(); ++i) {
+                    auto &index = tab_.indexes[i];
+                    auto ih =
+                        sm_manager_->ihs_.at(sm_manager_->get_ix_manager()->get_index_name(x->tab_name_, index.cols))
+                            .get();
+                    char *key = new char[index.col_total_len];
+                    int offset = 0;
+                    for (int j = 0; j < index.col_num; j++) {
+                        memcpy(key + offset, rec.data + index.cols[j].offset, index.cols[j].len);
+                        offset += index.cols[j].len;
+                    }
+                    bool is_insert = ih->insert_entry(key, rid_, context_->txn_);
+                    if (!is_insert) {
+                        fh_->delete_record(rid_, context_);
+                        throw IndexEntryRepeatError();
+                    }
+                    delete[] key;
+                }
+            }
+        }
+    }
+}
+
 // 执行select语句，select语句的输出除了需要返回客户端外，还需要写入output.txt文件中
 void QlManager::select_from(std::unique_ptr<AbstractExecutor> executorTreeRoot, std::vector<TabCol> sel_cols,
                             Context *context) {
@@ -179,6 +287,60 @@ void QlManager::select_from(std::unique_ptr<AbstractExecutor> executorTreeRoot, 
         num_rec++;
         executorTreeRoot->nextTuple();
     }
+    outfile.close();
+    // Print footer into buffer
+    rec_printer.print_separator(context);
+    // Print record count into buffer
+    RecordPrinter::print_record_count(num_rec, context);
+}
+
+void QlManager::agg_select_from(std::unique_ptr<AbstractExecutor> executorTreeRoot, std::vector<TabCol> sel_cols,
+                                Context *context) {
+    std::vector<std::string> captions;
+    captions.reserve(sel_cols.size());
+    for (auto &sel_col : sel_cols) {
+        captions.push_back(sel_col.col_name);
+    }
+
+    // Print header into buffer
+    RecordPrinter rec_printer(sel_cols.size());
+    rec_printer.print_separator(context);
+    rec_printer.print_record(captions, context);
+    rec_printer.print_separator(context);
+    // print header into file
+    std::fstream outfile;
+    outfile.open("output.txt", std::ios::out | std::ios::app);
+    outfile << "|";
+    for (int i = 0; i < captions.size(); ++i) {
+        outfile << " " << captions[i] << " |";
+    }
+    outfile << "\n";
+
+    // Print records
+    size_t num_rec = 0;
+    // 执行query_plan
+
+    auto Tuple = executorTreeRoot->Next();
+    std::vector<std::string> columns;
+
+    std::string col_str;
+    char *rec_buf = Tuple->data;
+
+    col_str = std::string((char *)rec_buf, Tuple->size);
+    col_str.resize(strlen(col_str.c_str()));
+
+    columns.push_back(col_str);
+
+    // print record into buffer
+    rec_printer.print_record(columns, context);
+    // print record into file
+    outfile << "|";
+    for (int i = 0; i < columns.size(); ++i) {
+        outfile << " " << columns[i] << " |";
+    }
+    outfile << "\n";
+    num_rec++;
+
     outfile.close();
     // Print footer into buffer
     rec_printer.print_separator(context);
