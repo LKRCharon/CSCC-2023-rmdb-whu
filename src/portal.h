@@ -155,18 +155,18 @@ class Portal {
                                                            context);
             }
         } else if (auto x = std::dynamic_pointer_cast<JoinPlan>(plan)) {
-            // Fixme，有索引的时候直接生成的是索引的查询计划怎么办？
-            x->left_->tag = PlanTag::T_SeqScan;
-            x->right_->tag = PlanTag::T_SeqScan;
+            // // Fixme，有索引的时候直接生成的是索引的查询计划怎么办？
+            // x->left_->tag = PlanTag::T_SeqScan;
+            // x->right_->tag = PlanTag::T_SeqScan;
             std::unique_ptr<AbstractExecutor> left = convert_plan_executor(x->left_, context);
             std::unique_ptr<AbstractExecutor> right = convert_plan_executor(x->right_, context);
             // FixMe: 某些情况还是需要用NNLJ 待修改
             std::unique_ptr<AbstractExecutor> join;
+            // if(use_naive_blockjoin){}
             if (is_with_txn) {
-
                 join = std::make_unique<NaiveNestedLoopJoinExecutor>(std::move(left), std::move(right),
                                                                      std::move(x->conds_));
-                // left->get_conds();
+                left->get_conds();
             } else {
                 join =
                     std::make_unique<NestedLoopJoinExecutor>(std::move(left), std::move(right), std::move(x->conds_));

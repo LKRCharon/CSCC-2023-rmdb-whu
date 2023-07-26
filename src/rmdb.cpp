@@ -29,7 +29,6 @@ See the Mulan PSL v2 for more details. */
 
 static bool should_exit = false;
 static bool need_output = true;
-bool is_with_txn = false;
 
 // 构建全局所需的管理器对象
 auto disk_manager = std::make_unique<DiskManager>();
