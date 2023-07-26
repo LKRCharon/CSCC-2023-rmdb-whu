@@ -2000,4 +2000,4 @@ insert into t2 values(997,'name',1,2,586.470588);
 insert into t2 values(998,'name',1,2,587.058824);
 insert into t2 values(999,'name',1,2,587.647059);
 insert into t2 values(1000,'name',1,2,588.235294);
-select * from t1,t2;
+select * from t1,t2 where t2.t_id>t1.id and t1.id>999 order by t1.id;

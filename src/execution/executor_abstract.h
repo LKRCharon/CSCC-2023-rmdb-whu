@@ -21,7 +21,7 @@ class AbstractExecutor {
 
     Context *context_;
     
-    // RmFileHandle *GetFileHandle(){return nullptr;};
+    virtual RmFileHandle *GetFileHandle(){};
 
     virtual ~AbstractExecutor() = default;
 

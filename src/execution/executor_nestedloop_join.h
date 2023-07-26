@@ -12,7 +12,6 @@ See the Mulan PSL v2 for more details. */
 #include "execution_defs.h"
 #include "execution_manager.h"
 #include "executor_block_scan.h"
-#include "executor_seq_scan.h"
 #include "index/ix.h"
 #include "record/rm_file_handle.h"
 #include "system/sm.h"
@@ -50,22 +49,11 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
         fed_conds_ = std::move(conds);
 
         // TODO
-        SeqScanExecutor *left_scan = dynamic_cast<SeqScanExecutor *>(left_.get());
-        SeqScanExecutor *right_scan = dynamic_cast<SeqScanExecutor *>(right_.get());
-
-        if (left_scan) {
-            // 转换成功，可以使用 seqScanExecutor 来访问 SeqScanExecutor 的成员
-            // 例如，seqScanExecutor->someMethod();
-            outer_ = std::make_unique<BlockScanner>(right_scan, pages_, 1);
-            inner_ = std::make_unique<BlockScanner>(left_scan, pages_ + 1, JOIN_BUFFER_SIZE - 1);
-
-        } else {
-            // 转换失败，left_ 并不是 SeqScanExecutor 类型
-            // 处理转换失败的情况
-            throw InternalError("abstract -> seqscan fail");
-        }
 
         // FixMe：搞明白到底move还是传地址
+        outer_ = std::make_unique<BlockScanner>(std::move(right_), pages_, 1);
+        inner_ = std::make_unique<BlockScanner>(std::move(left_), pages_ + 1, JOIN_BUFFER_SIZE - 1);
+
     }
 
     ~NestedLoopJoinExecutor() { delete[] pages_; }

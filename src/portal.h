@@ -153,6 +153,8 @@ class Portal {
                                                            context);
             }
         } else if (auto x = std::dynamic_pointer_cast<JoinPlan>(plan)) {
+            x->left_->tag=PlanTag::T_SeqScan;
+            x->right_->tag=PlanTag::T_SeqScan;
             std::unique_ptr<AbstractExecutor> left = convert_plan_executor(x->left_, context);
             std::unique_ptr<AbstractExecutor> right = convert_plan_executor(x->right_, context);
             std::unique_ptr<AbstractExecutor> join =

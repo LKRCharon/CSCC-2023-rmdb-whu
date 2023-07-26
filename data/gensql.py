@@ -12,7 +12,7 @@ def parse(csv_name):
             is_header = 1
             name = []
             for index, row in enumerate(csv.reader(d, skipinitialspace=True)):
-                if index == 1001:
+                if index == 10001:
                     break
                 
                 if is_header==1:
