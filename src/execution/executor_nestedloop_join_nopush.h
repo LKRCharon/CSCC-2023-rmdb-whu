@@ -16,25 +16,25 @@ See the Mulan PSL v2 for more details. */
 #include "record/rm_file_handle.h"
 #include "system/sm.h"
 
-// 使用块嵌套优化
-class NestedLoopJoinExecutor : public AbstractExecutor {
+// 使用块嵌套优化,不下推谓词
+class NestedLoopJoinExecutorNoPush : public AbstractExecutor {
    private:
     std::unique_ptr<AbstractExecutor> left_;   // 左儿子节点（需要join的表）
     std::unique_ptr<AbstractExecutor> right_;  // 右儿子节点（需要join的表）
     size_t len_;                               // join后获得的每条记录的长度
     std::vector<ColMeta> cols_;                // join后获得的记录的字段
 
-    std::vector<Condition> fed_conds_;  // join条件
+    std::vector<Condition> conds_;  // join条件
     bool is_end_;
 
     // 块嵌套
     Page *pages_ = new Page[JOIN_BUFFER_SIZE];
-    std::unique_ptr<BlockScanner> inner_;
-    std::unique_ptr<BlockScanner> outer_;
+    std::unique_ptr<BlockScannerNoPush> inner_;
+    std::unique_ptr<BlockScannerNoPush> outer_;
 
    public:
-    NestedLoopJoinExecutor(std::unique_ptr<AbstractExecutor> left, std::unique_ptr<AbstractExecutor> right,
-                           std::vector<Condition> conds) {
+    NestedLoopJoinExecutorNoPush(std::unique_ptr<AbstractExecutor> left, std::unique_ptr<AbstractExecutor> right,
+                                 std::vector<Condition> conds) {
         left_ = std::move(left);
         right_ = std::move(right);
         len_ = left_->tupleLen() + right_->tupleLen();
@@ -46,18 +46,15 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
 
         cols_.insert(cols_.end(), right_cols.begin(), right_cols.end());
         is_end_ = false;
-        fed_conds_ = std::move(conds);
+        conds_ = std::move(conds);
 
-        // TODO
-
-        // FixMe：搞明白到底move还是传地址
-        outer_ = std::make_unique<BlockScanner>(std::move(right_), pages_, 1);
-        inner_ = std::make_unique<BlockScanner>(std::move(left_), pages_ + 1, JOIN_BUFFER_SIZE - 1);
+        outer_ = std::make_unique<BlockScannerNoPush>(std::move(right_), pages_, 1);
+        inner_ = std::make_unique<BlockScannerNoPush>(std::move(left_), pages_ + 1, JOIN_BUFFER_SIZE - 1);
     }
 
-    ~NestedLoopJoinExecutor() { delete[] pages_; }
+    ~NestedLoopJoinExecutorNoPush() { delete[] pages_; }
 
-    std::string getType() override { return "NestedLoopJoin"; }
+    std::string getType() override { return "NestedLoopJoinExecutorNoPush"; }
 
     size_t tupleLen() const override { return len_; }
 
@@ -74,7 +71,7 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
             outer_->bbmNext();
             outer_->beginTuple();
         }
-        feed_inner();
+
         inner_->beginTuple();
         if (inner_->isBufferEnd()) {
             nextTuple();
@@ -95,7 +92,6 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
                     }
                     outer_->nextTuple();
                     if (!outer_->isBufferEnd()) {
-                        feed_inner();
                         inner_->beginTuple();
                         if (!inner_->isBufferEnd()) {
                             return;
@@ -117,7 +113,7 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
                     outer_->bbmNext();
                     outer_->beginTuple();
                 }
-                feed_inner();
+
                 inner_->bbmNext();
                 inner_->beginTuple();
                 if (!inner_->isBufferEnd()) {
@@ -144,7 +140,7 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
                 outer_->bbmNext();
                 outer_->beginTuple();
             }
-            feed_inner();
+
             inner_->bbmNext();
             inner_->beginTuple();
             if (!inner_->isBufferEnd()) {
@@ -174,16 +170,6 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
         memcpy(right_start, right_record->data, right_record->size);
         // lab3 task2 Todo End
         return record;
-    }
-
-    // 默认以right 作inner table
-    /**
-     * @brief 修改conditons
-     * @note left拿到新值后都要做
-     */
-    void feed_inner() {
-        auto left_dict = rec2dict(outer_->cols(), outer_->getTuple().get());
-        inner_->feed(left_dict, fed_conds_);
     }
 
     Rid &rid() override { return _abstract_rid; }

@@ -39,7 +39,7 @@ class AbstractExecutor {
 
     virtual void feed(const std::map<TabCol, Value> &feed_dict){};
 
-    virtual void feed(const std::map<TabCol, Value> &feed_dict, const std::vector<Condition> &feed_conds){};
+    virtual void feed(const std::map<TabCol, Value> &feed_dict, const std::vector<Condition> feed_conds){};
 
     virtual bool is_end() const { return true; };
 

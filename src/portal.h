@@ -21,6 +21,7 @@ See the Mulan PSL v2 for more details. */
 #include "execution/executor_index_scan.h"
 #include "execution/executor_insert.h"
 #include "execution/executor_nestedloop_join.h"
+#include "execution/executor_nestedloop_join_nopush.h"
 #include "execution/executor_nnlj.h"
 #include "execution/executor_projection.h"
 #include "execution/executor_seq_scan.h"
@@ -163,14 +164,16 @@ class Portal {
             // FixMe: 某些情况还是需要用NNLJ 待修改
             std::unique_ptr<AbstractExecutor> join;
             // if(use_naive_blockjoin){}
-            if (is_with_txn) {
-                join = std::make_unique<NaiveNestedLoopJoinExecutor>(std::move(left), std::move(right),
-                                                                     std::move(x->conds_));
-                left->get_conds();
-            } else {
-                join =
-                    std::make_unique<NestedLoopJoinExecutor>(std::move(left), std::move(right), std::move(x->conds_));
-            }
+            // if (is_with_txn) {
+            //     join = std::make_unique<NaiveNestedLoopJoinExecutor>(std::move(left), std::move(right),
+            //                                                          std::move(x->conds_));
+            //     // left->get_conds();
+            // } else {
+            join = std::make_unique<NestedLoopJoinExecutor>(std::move(left), std::move(right), std::move(x->conds_));
+            // join =
+            //     std::make_unique<NestedLoopJoinExecutorNoPush>(std::move(left), std::move(right),
+            //     std::move(x->conds_));
+            // }
             return join;
         } else if (auto x = std::dynamic_pointer_cast<SortPlan>(plan)) {
             return std::make_unique<SortExecutor>(convert_plan_executor(x->subplan_, context), x->sel_col_, x->is_desc_,

@@ -134,15 +134,15 @@ class SeqScanExecutor : public AbstractExecutor {
         // lab3 task2 todo end
     }
 
-    void feed(const std::map<TabCol, Value> &feed_dict, const std::vector<Condition> &fed_conds) override {
-        fed_conds_ = fed_conds;
+    void feed(const std::map<TabCol, Value> &feed_dict, const std::vector<Condition> fed_conds) override {
+        fed_conds_ = conds_;
         std::map<CompOp, CompOp> swap_op = {
             {OP_EQ, OP_EQ}, {OP_NE, OP_NE}, {OP_LT, OP_GT}, {OP_GT, OP_LT}, {OP_LE, OP_GE}, {OP_GE, OP_LE},
         };
-        for (auto &cond : fed_conds_) {
+        for (auto cond : fed_conds) {
             if (cond.lhs_col.tab_name != tab_name_) {
                 // lhs is on other table, now rhs must be on this table
-                assert(!cond.is_rhs_val && cond.rhs_col.tab_name == tab_name_);
+                // assert(!cond.is_rhs_val && cond.rhs_col.tab_name == tab_name_);
                 // swap lhs and rhs
                 std::swap(cond.lhs_col, cond.rhs_col);
                 cond.op = swap_op.at(cond.op);
@@ -151,8 +151,9 @@ class SeqScanExecutor : public AbstractExecutor {
                 cond.is_rhs_val = true;
                 cond.rhs_val = feed_dict.at(cond.rhs_col);
             }
+            fed_conds_.push_back(cond);
         }
-        check_runtime_conds();
+        // check_runtime_conds();
     }
 
     Rid &rid() override { return rid_; }
