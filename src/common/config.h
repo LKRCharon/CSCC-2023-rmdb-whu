@@ -22,21 +22,23 @@ extern std::chrono::milliseconds cycle_detection_interval;
 /** True if logging should be enabled, false otherwise. */
 extern std::atomic<bool> enable_logging;
 
+extern bool is_with_txn;
+
 /** If ENABLE_LOGGING is true, the log should be flushed to disk every LOG_TIMEOUT. */
 extern std::chrono::duration<int64_t> log_timeout;
 
-static constexpr int INVALID_FRAME_ID = -1;      // invalid frame id
-static constexpr int INVALID_PAGE_ID = -1;       // invalid page id
-static constexpr int INVALID_TXN_ID = -1;        // invalid transaction id
-static constexpr int INVALID_TIMESTAMP = -1;     // invalid transaction timestamp
-static constexpr int INVALID_LSN = -1;           // invalid log sequence number
-static constexpr int HEADER_PAGE_ID = 0;         // the header page id
-static constexpr int PAGE_SIZE = 4096;           // size of a data page in byte  4KB
+static constexpr int INVALID_FRAME_ID = -1;   // invalid frame id
+static constexpr int INVALID_PAGE_ID = -1;    // invalid page id
+static constexpr int INVALID_TXN_ID = -1;     // invalid transaction id
+static constexpr int INVALID_TIMESTAMP = -1;  // invalid transaction timestamp
+static constexpr int INVALID_LSN = -1;        // invalid log sequence number
+static constexpr int HEADER_PAGE_ID = 0;      // the header page id
+static constexpr int PAGE_SIZE = 4096;        // size of a data page in byte  4KB
 // static constexpr int BUFFER_POOL_SIZE = 131072;  // size of buffer pool 256MB
 static constexpr int BUFFER_POOL_SIZE = 1048576;  // size of buffer pool 1GB
 // static constexpr int BUFFER_POOL_SIZE = 32;  // size of buffer pool 512MB
 
-static constexpr int JOIN_BUFFER_SIZE = 32768;   // size of join buffer 4*32MB
+static constexpr int JOIN_BUFFER_SIZE = 32768;  // size of join buffer 4*32MB
 // static constexpr int BUFFER_POOL_SIZE = 262144;                                // size of buffer pool 1GB
 static constexpr int LOG_BUFFER_SIZE = (1024 * PAGE_SIZE);  // size of a log buffer in byte
 static constexpr int BUCKET_SIZE = 50;                      // size of extendible hash bucket
@@ -56,5 +58,3 @@ static const std::string LOG_FILE_NAME = "db.log";
 static const std::string REPLACER_TYPE = "LRU";
 
 static const std::string DB_META_NAME = "db.meta";
-
-static bool is_with_txn = false;

@@ -14,6 +14,7 @@ See the Mulan PSL v2 for more details. */
 #include <cstring>
 #include <string>
 #include "common/common.h"
+#include "common/config.h"
 #include "execution/execution_sort.h"
 #include "execution/executor_abstract.h"
 #include "execution/executor_delete.h"
@@ -162,8 +163,10 @@ class Portal {
             // FixMe: 某些情况还是需要用NNLJ 待修改
             std::unique_ptr<AbstractExecutor> join;
             if (is_with_txn) {
+
                 join = std::make_unique<NaiveNestedLoopJoinExecutor>(std::move(left), std::move(right),
                                                                      std::move(x->conds_));
+                // left->get_conds();
             } else {
                 join =
                     std::make_unique<NestedLoopJoinExecutor>(std::move(left), std::move(right), std::move(x->conds_));

@@ -15,8 +15,8 @@ See the Mulan PSL v2 for more details. */
 #include <signal.h>
 #include <unistd.h>
 #include <atomic>
-
 #include "analyze/analyze.h"
+#include "common/config.h"
 #include "errors.h"
 #include "optimizer/optimizer.h"
 #include "optimizer/plan.h"
@@ -29,6 +29,7 @@ See the Mulan PSL v2 for more details. */
 
 static bool should_exit = false;
 static bool need_output = true;
+bool is_with_txn = false;
 
 // 构建全局所需的管理器对象
 auto disk_manager = std::make_unique<DiskManager>();
@@ -297,7 +298,7 @@ int main(int argc, char **argv) {
         }
         // Open database
         sm_manager->open_db(db_name);
-        { sm_manager->reset_db(); }
+        // sm_manager->reset_db();
         // recovery database
         recovery->analyze();
         recovery->redo();

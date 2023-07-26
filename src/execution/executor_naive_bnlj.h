@@ -88,7 +88,7 @@
 //     bool is_end() { return join_buffer_->size_ == 0; }
 // };
 
-// class BlockNestedLoopJoinExecutor : public AbstractExecutor {
+// class NaiveBlockNestedLoopJoinExecutor : public AbstractExecutor {
 //    private:
 //     std::unique_ptr<AbstractExecutor> left_;   // 左儿子节点（需要join的表）
 //     std::unique_ptr<AbstractExecutor> right_;  // 右儿子节点（需要join的表）
@@ -105,8 +105,8 @@
 //     std::unique_ptr<JoinBuffer>* right_join_buffer_;
 
 //    public:
-//     BlockNestedLoopJoinExecutor(std::unique_ptr<AbstractExecutor> left, std::unique_ptr<AbstractExecutor> right,
-//                                 std::vector<Condition> conds) {
+//     NaiveBlockNestedLoopJoinExecutor(std::unique_ptr<AbstractExecutor> left, std::unique_ptr<AbstractExecutor> right,
+//                                      std::vector<Condition> conds) {
 //         left_ = std::move(left);
 //         right_ = std::move(right);
 //         len_ = left_->tupleLen() + right_->tupleLen();
@@ -130,7 +130,7 @@
 
 //     size_t tupleLen() const override { return len_; };
 
-//     std::string getType() override { return "NaiveBlockNestedLoopJoinExecutor"; };
+//     std::string getType() override { return "NaiveNaiveBlockNestedLoopJoinExecutor"; };
 
 //     //
 //     void beginTuple() override {
@@ -188,29 +188,8 @@
 //                         auto right_record = (*right_join_buffer_)->get_record();
 //                         // 检查是否符合fed_cond
 //                         bool is_fit = true;
-//                         for (auto cond : fed_conds_) {
-//                             // 取left value
 
-//                             auto left_cols = left_->cols();
-//                             auto left_col = *(left_->get_col(left_cols, cond.lhs_col));
-//                             auto left_value = fetch_value(*left_record, left_col);
-
-//                             // 取right value
-//                             Value right_value;
-//                             if (cond.is_rhs_val) {
-//                                 right_value = cond.rhs_val;
-//                             } else {
-//                                 auto right_cols = right_->cols();
-//                                 auto right_col = *(right_->get_col(right_cols, cond.rhs_col));
-//                                 right_value = fetch_value(*right_record, right_col);
-//                             }
-
-//                             // 比较是否符合条件
-//                             if (!compare_value(left_value, right_value, cond.op)) {
-//                                 is_fit = false;
-//                                 break;
-//                             }
-//                         }
+//                         auto is_fit = eval(*left_record->data, *right_record->data);
 //                         // 如果符合要求，则返回
 //                         if (is_fit) {
 //                             return;

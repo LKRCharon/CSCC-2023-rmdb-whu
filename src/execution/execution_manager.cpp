@@ -9,7 +9,7 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details. */
 
 #include "execution_manager.h"
-
+#include "common/config.h"
 #include "executor_delete.h"
 #include "executor_index_scan.h"
 #include "executor_insert.h"
@@ -96,7 +96,7 @@ void QlManager::run_cmd_utility(std::shared_ptr<Plan> plan, txn_id_t *txn_id, Co
             case T_Transaction_begin: {
                 // 显示开启一个事务
                 context->txn_->set_txn_mode(true);
-                is_with_txn = true;
+                bool is_with_txn = true;
                 break;
             }
             case T_Transaction_commit: {
