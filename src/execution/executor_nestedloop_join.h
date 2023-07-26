@@ -94,8 +94,9 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
         }
     }
 
+    // 每次调用next都是循环的结束，循环开始前会检查是否end，一般不会有问题
     void nextTuple() override {
-        assert(!is_end());
+        // assert(!is_end());
         while (!(outer_->isBbmEnd() && outer_->isBufferEnd())) {
             while (!(inner_->isBbmEnd() && inner_->isBufferEnd() && outer_->isBufferEnd())) {
                 while (!outer_->isBufferEnd()) {
@@ -114,7 +115,10 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
                         }
                     }
                 }
-                if (inner_->isBbmEnd() && inner_->isBufferEnd()) {
+                //第二层循环，inner表要换下一块，outer回到开头
+                if (inner_->isBbmEnd() && inner_->isBufferEnd() && outer_->isBufferEnd()) {
+                    // outer的buffer已经扫完所有记录
+                    // 如果inner表没有下一块了，退出到第一层循环
                     break;
                 }
                 outer_->beginTuple();
@@ -132,13 +136,16 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
                 if (!inner_->isBufferEnd()) {
                     return;
                 }
+                // 如果inner是bufferend，说明outer这一行在这inner的这一块中没有合适记录
+                // outer下一行 inner回开头
             }
+            // 最外层循环，当inner表扫到表尾，outer表扫到buf尾，outer表换下一块
 
             // where t2.id<t1.id and t1.id<2
             // t1.id先扫到1，t2直接bufferend，进到此处
             if (outer_->isBbmEnd()) {
                 is_end_ = true;
-                break;
+                return;
             }
             outer_->bbmNext();
             outer_->beginTuple();

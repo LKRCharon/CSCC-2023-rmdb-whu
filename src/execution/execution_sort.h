@@ -35,7 +35,8 @@ class SortExecutor : public AbstractExecutor {
     std::unique_ptr<RmRecord> last_record = nullptr;  // 记录上一次返回的 RmRecord
     // DONE ----------------------------------------------------------------------------
    public:
-    SortExecutor(std::unique_ptr<AbstractExecutor> prev, std::vector<TabCol> sel_cols, std::vector<bool> is_desc,int limit) {
+    SortExecutor(std::unique_ptr<AbstractExecutor> prev, std::vector<TabCol> sel_cols, std::vector<bool> is_desc,
+                 int limit) {
         prev_ = std::move(prev);
         auto &prev_cols = prev_->cols();
         size_t curr_offset = 0;
@@ -112,7 +113,7 @@ class SortExecutor : public AbstractExecutor {
         for (size_t i = 0; i < cols_.size(); ++i) {
             int res = compare(a + cols_.at(i).offset, b + cols_.at(i).offset, cols_[i].type, cols_[i].len);
             if (res != 0) {
-                return is_desc_.at(i) ? (res == 1) : (res == -1);
+                return is_desc_.at(i) ? (res > 0) : (res < 0);
             }
         }
         return false;
