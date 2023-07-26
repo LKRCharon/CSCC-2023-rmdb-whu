@@ -297,9 +297,7 @@ int main(int argc, char **argv) {
         }
         // Open database
         sm_manager->open_db(db_name);
-        {
-            sm_manager->reset_db();
-        }
+        { sm_manager->reset_db(); }
         // recovery database
         recovery->analyze();
         recovery->redo();

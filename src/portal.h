@@ -20,6 +20,7 @@ See the Mulan PSL v2 for more details. */
 #include "execution/executor_index_scan.h"
 #include "execution/executor_insert.h"
 #include "execution/executor_nestedloop_join.h"
+#include "execution/executor_nnlj.h"
 #include "execution/executor_projection.h"
 #include "execution/executor_seq_scan.h"
 #include "execution/executor_update.h"
@@ -153,16 +154,24 @@ class Portal {
                                                            context);
             }
         } else if (auto x = std::dynamic_pointer_cast<JoinPlan>(plan)) {
-            x->left_->tag=PlanTag::T_SeqScan;
-            x->right_->tag=PlanTag::T_SeqScan;
+            // Fixme，有索引的时候直接生成的是索引的查询计划怎么办？
+            x->left_->tag = PlanTag::T_SeqScan;
+            x->right_->tag = PlanTag::T_SeqScan;
             std::unique_ptr<AbstractExecutor> left = convert_plan_executor(x->left_, context);
             std::unique_ptr<AbstractExecutor> right = convert_plan_executor(x->right_, context);
-            std::unique_ptr<AbstractExecutor> join =
-                std::make_unique<NestedLoopJoinExecutor>(std::move(left), std::move(right), std::move(x->conds_));
+            // FixMe: 某些情况还是需要用NNLJ 待修改
+            std::unique_ptr<AbstractExecutor> join;
+            if (is_with_txn) {
+                join = std::make_unique<NaiveNestedLoopJoinExecutor>(std::move(left), std::move(right),
+                                                                     std::move(x->conds_));
+            } else {
+                join =
+                    std::make_unique<NestedLoopJoinExecutor>(std::move(left), std::move(right), std::move(x->conds_));
+            }
             return join;
         } else if (auto x = std::dynamic_pointer_cast<SortPlan>(plan)) {
-            return std::make_unique<SortExecutor>(convert_plan_executor(x->subplan_, context), x->sel_col_,
-                                                  x->is_desc_,x->limit_);
+            return std::make_unique<SortExecutor>(convert_plan_executor(x->subplan_, context), x->sel_col_, x->is_desc_,
+                                                  x->limit_);
         }
         return nullptr;
     }

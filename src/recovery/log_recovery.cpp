@@ -9,6 +9,7 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details. */
 
 #include "log_recovery.h"
+#include "common/config.h"
 
 /**
  * @description: analyze阶段，需要获得脏页表（DPT）和未完成的事务列表（ATT）
@@ -39,6 +40,7 @@ void RecoveryManager::analyze() {
                 break;
             }
             LogType log_type = *reinterpret_cast<LogType *>(read_buf + buffer_offset + OFFSET_LOG_TYPE);
+            is_with_txn = true;
             switch (log_type) {
                 case LogType::BEGIN: {
                     BeginLogRecord *log_rec = new BeginLogRecord();
