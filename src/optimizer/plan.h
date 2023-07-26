@@ -41,6 +41,18 @@ class ScanPlan : public Plan {
         fed_conds_ = conds_;
         index_meta_ = index_meta;
     }
+    // 为了解决Join生成scan的时候可能根据索引生成ixScan，需要保留conds，等生成Join算子时使用
+    ScanPlan(PlanTag tag, SmManager *sm_manager, std::string tab_name, std::vector<Condition> conds,
+             std::vector<Condition> ix_conds, IndexMeta index_meta) {
+        Plan::tag = tag;
+        tab_name_ = std::move(tab_name);
+        conds_ = std::move(conds);
+        TabMeta &tab = sm_manager->db_.get_table(tab_name_);
+        cols_ = tab.cols;
+        len_ = cols_.back().offset + cols_.back().len;
+        fed_conds_ = std::move(ix_conds);
+        index_meta_ = index_meta;
+    }
     ScanPlan(PlanTag tag, SmManager *sm_manager, std::string tab_name, std::vector<Condition> conds,
              std::vector<std::string> index_col_names) {
         Plan::tag = tag;

@@ -157,8 +157,8 @@ class Portal {
             }
         } else if (auto x = std::dynamic_pointer_cast<JoinPlan>(plan)) {
             // // Fixme，有索引的时候直接生成的是索引的查询计划怎么办？
-            // x->left_->tag = PlanTag::T_SeqScan;
-            // x->right_->tag = PlanTag::T_SeqScan;
+            x->left_->tag = PlanTag::T_SeqScan;
+            x->right_->tag = PlanTag::T_SeqScan;
             std::unique_ptr<AbstractExecutor> left = convert_plan_executor(x->left_, context);
             std::unique_ptr<AbstractExecutor> right = convert_plan_executor(x->right_, context);
             // FixMe: 某些情况还是需要用NNLJ 待修改

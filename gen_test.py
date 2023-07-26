@@ -14,6 +14,16 @@ with open("aadebugsql/index/txn1.sql", "w") as file:
     file.write(f"delete from d where id>50 and id<100;\n");
     file.write('commit;\n');
     file.write('select * from d where id>0;');
+with open("aadebugsql/index/bnlj_index.sql", "w") as file:
+    file.write('create table t1 (id int, name char(16),test bigint,test2 bigint,test3 float);\n');
+    file.write('create table t2 (t_id int, t_name char(16),t_test bigint,t_test2 bigint,t_test3 float);\n');
+    file.write('create index t1(id,test3);\n');
+    file.write('create index t2(t_id);\n');
+    for id in range(1,1001):
+        file.write(f"insert into t1 values({id},'name',1,2,{id/1.7:.6f});\n");
+        file.write(f"insert into t2 values({id},'name',1,2,{id/1.0:.6f});\n");
+
+    file.write('select * from t1 where id>0;');
 
 with open("aadebugsql/multiple1.sql", "w") as file:
     file.write('create table d (id int, name char(16),test bigint,test2 bigint,test3 float);\n');

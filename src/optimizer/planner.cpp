@@ -25,6 +25,8 @@ See the Mulan PSL v2 for more details. */
 // * 目前的索引匹配规则为：完全匹配索引字段，且全部为单点查询，不会自动调整where条件的顺序
 // TODO: 使用最左匹配规则，调整where的顺序
 // DONE
+// lkr 7.26：join的时候会来生成两个子scan
+
 bool Planner::get_index_cols(std::string tab_name, std::vector<Condition> curr_conds, IndexMeta &index_meta,
                              std::vector<Condition> &idx_conds) {
     TabMeta &tab = sm_manager_->db_.get_table(tab_name);
@@ -239,7 +241,7 @@ std::shared_ptr<Plan> Planner::make_one_rel(std::shared_ptr<Query> query) {
         } else {  // 存在索引
                   // conds传经过处理的idxconds
             table_scan_executors[i] =
-                std::make_shared<ScanPlan>(T_IndexScan, sm_manager_, tables[i], idx_conds, index_meta);
+                std::make_shared<ScanPlan>(T_IndexScan, sm_manager_, tables[i], curr_conds, idx_conds, index_meta);
         }
     }
     // 只有一个表，不需要join。
@@ -345,15 +347,15 @@ std::shared_ptr<Plan> Planner::generate_sort_plan(std::shared_ptr<Query> query, 
     std::vector<TabCol> sel_col;
     std::vector<bool> orderDir;
 
-    for(auto ordercol: x->order){
-            for (auto &col : all_cols) {
-            if(col.name.compare(ordercol->cols->col_name) == 0 )
-            sel_col.push_back({.tab_name = col.tab_name, .col_name = col.name});
+    for (auto ordercol : x->order) {
+        for (auto &col : all_cols) {
+            if (col.name.compare(ordercol->cols->col_name) == 0)
+                sel_col.push_back({.tab_name = col.tab_name, .col_name = col.name});
         }
-        orderDir.push_back(ordercol->orderby_dir==ast::OrderBy_DESC);
+        orderDir.push_back(ordercol->orderby_dir == ast::OrderBy_DESC);
     }
-    
-    return std::make_shared<SortPlan>(T_Sort, std::move(plan), sel_col,orderDir,x->limit);
+
+    return std::make_shared<SortPlan>(T_Sort, std::move(plan), sel_col, orderDir, x->limit);
 }
 
 /**
