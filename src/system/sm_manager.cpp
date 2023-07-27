@@ -37,7 +37,7 @@ void SmManager::create_db(const std::string& db_name) {
     if (is_dir(db_name)) {
         throw DatabaseExistsError(db_name);
     }
-    //为数据库创建一个子目录
+    // 为数据库创建一个子目录
     std::string cmd = "mkdir " + db_name;
     if (system(cmd.c_str()) < 0) {  // 创建一个名为db_name的目录
         throw UnixError();
@@ -45,7 +45,7 @@ void SmManager::create_db(const std::string& db_name) {
     if (chdir(db_name.c_str()) < 0) {  // 进入名为db_name的目录
         throw UnixError();
     }
-    //创建系统目录
+    // 创建系统目录
     DbMeta* new_db = new DbMeta();
     new_db->name_ = db_name;
 
@@ -231,6 +231,7 @@ void SmManager::create_table(const std::string& tab_name, const std::vector<ColD
  * @param {Context*} context
  */
 void SmManager::drop_table(const std::string& tab_name, Context* context) {
+    context->lock_mgr_->lock_exclusive_on_table(context->txn_, fhs_.at(tab_name)->GetFd());
     if (!db_.is_table(tab_name)) {
         throw TableNotFoundError(tab_name);
     }
