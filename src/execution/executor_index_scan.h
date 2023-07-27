@@ -73,7 +73,7 @@ class IndexScanExecutor : public AbstractExecutor {
             }
         }
         fed_conds_ = conds_;
-        context_->lock_mgr_->lock_shared_on_table(context_->txn_,fh_->GetFd());
+        context_->lock_mgr_->lock_shared_on_table(context_->txn_, fh_->GetFd());
     }
     IndexScanExecutor(SmManager *sm_manager, std::string tab_name, std::vector<Condition> conds,
                       std::vector<std::string> index_col_names, Context *context) {
@@ -133,14 +133,14 @@ class IndexScanExecutor : public AbstractExecutor {
             int used_index_num = (int)used_col_names_set.size();
             if (cond.op == OP_EQ) {
                 lower = ih->lower_bound(key, used_index_num);
-                upper = ih->upper_bound(key, used_index_num,true);
+                upper = ih->upper_bound(key, used_index_num, true);
             } else if (cond.op == OP_GE) {
                 lower = ih->lower_bound(key, used_index_num);
             } else if (cond.op == OP_LE) {
                 // find leaf 不使用num，在叶子节点二分才用num
-                upper = ih->upper_bound(key, used_index_num,true);
+                upper = ih->upper_bound(key, used_index_num, true);
             } else if (cond.op == OP_GT) {
-                lower = ih->upper_bound(key, used_index_num,false);
+                lower = ih->upper_bound(key, used_index_num, false);
             } else if (cond.op == OP_LT) {
                 upper = ih->lower_bound(key, used_index_num);
             }
@@ -157,13 +157,13 @@ class IndexScanExecutor : public AbstractExecutor {
             } catch (RecordNotFoundError &e) {
                 std::cerr << e.what() << std::endl;
             }
+        } else {
+            nextTuple();
         }
     }
 
     void nextTuple() override {
         check_runtime_conds();
-        assert(!is_end());
-
         scan_->next();
         if (is_end()) {
             return;

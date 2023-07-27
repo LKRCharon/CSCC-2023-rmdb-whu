@@ -151,15 +151,6 @@ class DMLPlan : public Plan {
         values_ = std::move(values);
         conds_ = std::move(conds);
         set_clauses_ = std::move(set_clauses);
-
-        // fixme: develop info
-        if (subplan_ != nullptr) {
-            std::string plan_tag_info = plantag2str(tag) + " subplan: " + plantag2str(subplan_->tag);
-            // LOG_DEBUG(plan_tag_info.c_str());
-        } else {
-            std::string plan_tag_info = plantag2str(tag) + " NO subplan";
-            // LOG_DEBUG(plan_tag_info.c_str());
-        }
     }
     ~DMLPlan() {}
     std::shared_ptr<Plan> subplan_;

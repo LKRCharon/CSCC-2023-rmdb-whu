@@ -17,7 +17,7 @@ See the Mulan PSL v2 for more details. */
 
 class UpdateExecutor : public AbstractExecutor {
    private:
-    std::unique_ptr<AbstractExecutor> prev_;  // 投影节点的儿子节点
+    std::unique_ptr<AbstractExecutor> prev_;  // update
     TabMeta tab_;
     std::vector<Condition> conds_;
     RmFileHandle *fh_;
@@ -27,6 +27,19 @@ class UpdateExecutor : public AbstractExecutor {
     SmManager *sm_manager_;
 
    public:
+    UpdateExecutor(SmManager *sm_manager, const std::string &tab_name, std::vector<SetClause> set_clauses,
+                   std::vector<Condition> conds, std::unique_ptr<AbstractExecutor> prev, Context *context) {
+        sm_manager_ = sm_manager;
+        tab_name_ = tab_name;
+        set_clauses_ = set_clauses;
+        tab_ = sm_manager_->db_.get_table(tab_name);
+        fh_ = sm_manager_->fhs_.at(tab_name).get();
+        conds_ = conds;
+        prev_ = std::move(prev);
+        context_ = context;
+        context_->lock_mgr_->lock_IX_on_table(context_->txn_, fh_->GetFd());
+    }
+
     UpdateExecutor(SmManager *sm_manager, const std::string &tab_name, std::vector<SetClause> set_clauses,
                    std::vector<Condition> conds, std::vector<Rid> rids, Context *context) {
         sm_manager_ = sm_manager;
@@ -40,14 +53,21 @@ class UpdateExecutor : public AbstractExecutor {
         context_->lock_mgr_->lock_IX_on_table(context_->txn_, fh_->GetFd());
     }
     // https://github.com/ruc-deke/rucbase-lab/blob/main/src/execution/executor_update.h
+
     std::unique_ptr<RmRecord> Next() override {
         // Update each rid from record file and index file
-        for (auto &rid : rids_) {
+        char *new_key = new char[fh_->get_file_hdr().record_size];
+        char *old_key = new char[fh_->get_file_hdr().record_size];
+
+        prev_->beginTuple();
+        while (!prev_->is_end()) {
+            auto &rid = prev_->rid();
+            prev_->nextTuple();
             auto rec = fh_->get_record(rid, context_);
             // old rec 保存原有data数据 防止update 失败
-            RmRecord old_rec = RmRecord(rec->size);
+            RmRecord *old_rec = new RmRecord(rec->size);
             // char *old_data = new char[rec->size];
-            memcpy(old_rec.data, rec->data, rec->size);
+            memcpy(old_rec->data, rec->data, rec->size);
 
             // 按照setclause修改rec的数据
             for (auto &set_clause : set_clauses_) {
@@ -63,7 +83,7 @@ class UpdateExecutor : public AbstractExecutor {
                 memcpy(rec->data + lhs_col->offset, val.raw->data, lhs_col->len);
             }
             // 更新前先写日志
-            auto log_rec = new UpdateLogRecord(context_->txn_->get_transaction_id(), old_rec, *rec, rid, tab_name_);
+            auto log_rec = new UpdateLogRecord(context_->txn_->get_transaction_id(), *old_rec, *rec, rid, tab_name_);
             log_rec->prev_lsn_ = context_->txn_->get_prev_lsn();
             context_->txn_->set_prev_lsn(context_->log_mgr_->add_log_to_buffer(log_rec));
             fh_->update_page_lsn(rid.page_no, log_rec->lsn_);
@@ -75,11 +95,9 @@ class UpdateExecutor : public AbstractExecutor {
                 auto ih =
                     sm_manager_->ihs_.at(sm_manager_->get_ix_manager()->get_index_name(tab_name_, index.cols)).get();
                 int offset = 0;
-                char *old_key = new char[index.col_total_len];
-                char *new_key = new char[index.col_total_len];
                 for (int j = 0; j < index.col_num; j++) {
                     memcpy(new_key + offset, rec->data + index.cols[j].offset, index.cols[j].len);
-                    memcpy(old_key + offset, old_rec.data + index.cols[j].offset, index.cols[j].len);
+                    memcpy(old_key + offset, old_rec->data + index.cols[j].offset, index.cols[j].len);
                     offset += index.cols[j].len;
                 }
                 // ih->delete_entry(old_key, context_->txn_);
@@ -93,8 +111,6 @@ class UpdateExecutor : public AbstractExecutor {
                     throw IndexEntryRepeatError();
                 }
                 // new出来的字符数组，delete
-                delete[] old_key;
-                delete[] new_key;
             }
 
             // Update record in record file
@@ -105,28 +121,27 @@ class UpdateExecutor : public AbstractExecutor {
                 auto &index = tab_.indexes.at(i);
                 auto ih =
                     sm_manager_->ihs_.at(sm_manager_->get_ix_manager()->get_index_name(tab_name_, index.cols)).get();
-                char *insert_key = new char[index.col_total_len];
-                char *delete_key = new char[index.col_total_len];
                 int offset = 0;
                 for (int j = 0; j < index.col_num; j++) {
-                    memcpy(insert_key + offset, rec->data + index.cols[j].offset, index.cols[j].len);
-                    memcpy(delete_key + offset, old_rec.data + index.cols[j].offset, index.cols[j].len);
+                    memcpy(new_key + offset, rec->data + index.cols[j].offset, index.cols[j].len);
+                    memcpy(old_key + offset, old_rec->data + index.cols[j].offset, index.cols[j].len);
                     offset += index.cols[j].len;
                 }
-                ih->delete_entry(delete_key, context_->txn_);
-                bool is_insert = ih->insert_entry(insert_key, rid, context_->txn_);
+                ih->delete_entry(old_key, context_->txn_);
+                bool is_insert = ih->insert_entry(new_key, rid, context_->txn_);
                 if (!is_insert) {
                     // fh_->delete_record(rid, context_);
                     // 这里应该走不到
                     throw IndexEntryRepeatError();
                 }
-                delete[] insert_key;
-                delete[] delete_key;
             }
             // 写入事务记录，等回滚
-            WriteRecord *write_rec = new WriteRecord(WType::UPDATE_TUPLE, tab_name_, rid, old_rec);
+            WriteRecord *write_rec = new WriteRecord(WType::UPDATE_TUPLE, tab_name_, rid, *old_rec);
             context_->txn_->append_write_record(write_rec);
         }
+
+        delete[] new_key;
+        delete[] old_key;
         return nullptr;
     }
 
