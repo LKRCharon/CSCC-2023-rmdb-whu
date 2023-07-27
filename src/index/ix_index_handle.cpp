@@ -264,8 +264,9 @@ IxIndexHandle::IxIndexHandle(DiskManager *disk_manager, BufferPoolManager *buffe
     file_hdr_ = new IxFileHdr();
     file_hdr_->deserialize(buf);
 
+    delete[] buf;
     // // disk_manager管理的fd对应的文件中，设置从file_hdr_->num_pages开始分配page_no
-    disk_manager_->set_fd2pageno(fd,file_hdr_->num_pages_);
+    disk_manager_->set_fd2pageno(fd, file_hdr_->num_pages_);
     // int now_page_no = disk_manager_->get_fd2pageno(fd);
     // disk_manager_->set_fd2pageno(fd, now_page_no + 1);
 }
@@ -397,13 +398,12 @@ IxNodeHandle *IxIndexHandle::split(IxNodeHandle *node) {
         new_node->page_hdr->next_leaf = node->page_hdr->next_leaf;
         node->page_hdr->next_leaf = new_node->get_page_no();
 
-        IxNodeHandle*next_node = fetch_node(new_node->page_hdr->next_leaf);
+        IxNodeHandle *next_node = fetch_node(new_node->page_hdr->next_leaf);
         next_node->page_hdr->prev_leaf = new_node->get_page_no();
         bpm_->unpin_page(next_node->get_page_id(), true);
         delete next_node;
     } else {
-        for (int i = 0; i < num; ++i)
-            maintain_child(new_node, i);
+        for (int i = 0; i < num; ++i) maintain_child(new_node, i);
     }
     // 3. 如果新的右兄弟结点不是叶子结点，更新该结点的所有f孩子结点的父节点信息(使用IxIndexHandle::maintain_child())
     return new_node;
