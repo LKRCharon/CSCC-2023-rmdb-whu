@@ -44,7 +44,7 @@ class SmManager {
         : disk_manager_(disk_manager), bpm_(buffer_pool_manager), rm_manager_(rm_manager), ix_manager_(ix_manager) {}
 
     ~SmManager() {}
-
+    DbMeta* get_db(){return &db_;}
     BufferPoolManager* get_bpm() { return bpm_; }
 
     RmManager* get_rm_manager() { return rm_manager_; }

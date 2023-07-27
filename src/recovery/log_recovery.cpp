@@ -9,21 +9,22 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details. */
 
 #include "log_recovery.h"
+
 #include "common/config.h"
 
 /**
  * @description: analyze阶段，需要获得脏页表（DPT）和未完成的事务列表（ATT）
  */
 void RecoveryManager::analyze() {
-    //用来从日志文件中读取
+    // 用来从日志文件中读取
     char *read_buf = new char[LOG_BUFFER_SIZE];
     // read_buf的偏置
     int buffer_offset = 0;
-    //定位文件的偏置
+    // 定位文件的偏置
     int file_offset = 0;
-    //每次读入的字节数
+    // 每次读入的字节数
     int num_bytes = 0;
-    //循环读取日志文件
+    // 循环读取日志文件
     while (true) {
         memset(read_buf, 0, LOG_BUFFER_SIZE);
         buffer_offset = 0;
@@ -210,7 +211,7 @@ void RecoveryManager::redo() {
         if (pair.second == false) {
             continue;
         }
-        //准备读入log
+        // 准备读入log
         auto rd = pair.first;
         int log_len = log_lens_[rd];
         char *log_buf = new char[log_len];
@@ -228,6 +229,9 @@ void RecoveryManager::redo() {
                 //     break;
                 // }
                 // 根据是否为回滚里的insert采用不同的插入函数
+                if (!sm_manager_->get_db()->is_table(tab_name)) {
+                    continue;
+                }
                 if (log_rec->is_rollback_) {
                     sm_manager_->fhs_.at(tab_name)->insert_record(log_rec->rid_, log_rec->insert_value_.data);
                 } else {
@@ -260,12 +264,14 @@ void RecoveryManager::redo() {
                 DeleteLogRecord *log_rec = new DeleteLogRecord();
                 log_rec->deserialize(log_buf);
                 std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
+                if (!sm_manager_->get_db()->is_table(tab_name)) {
+                    continue;
+                }
                 // auto page_handle = sm_manager_->fhs_.at(tab_name)->fetch_page_handle(log_rec->rid_.page_no);
                 // if (page_handle.page->get_page_lsn() > log_rec->lsn_) {
                 //     sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), false);
                 //     break;
                 // }
-
                 TabMeta &tab = sm_manager_->db_.get_table(tab_name);
                 for (size_t i = 0; i < tab.indexes.size(); ++i) {
                     auto &index = tab.indexes.at(i);
@@ -289,6 +295,9 @@ void RecoveryManager::redo() {
                 UpdateLogRecord *log_rec = new UpdateLogRecord();
                 log_rec->deserialize(log_buf);
                 std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
+                                if (!sm_manager_->get_db()->is_table(tab_name)) {
+                    continue;
+                }
                 // auto page_handle = sm_manager_->fhs_.at(tab_name)->fetch_page_handle(log_rec->rid_.page_no);
                 // if (page_handle.page->get_page_lsn() > log_rec->lsn_) {
                 //     sm_manager_->get_bpm()->unpin_page(page_handle.page->get_page_id(), false);
