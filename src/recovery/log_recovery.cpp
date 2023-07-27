@@ -41,7 +41,6 @@ void RecoveryManager::analyze() {
                 break;
             }
             LogType log_type = *reinterpret_cast<LogType *>(read_buf + buffer_offset + OFFSET_LOG_TYPE);
-            is_with_txn = true;
             switch (log_type) {
                 case LogType::BEGIN: {
                     BeginLogRecord *log_rec = new BeginLogRecord();
@@ -295,7 +294,7 @@ void RecoveryManager::redo() {
                 UpdateLogRecord *log_rec = new UpdateLogRecord();
                 log_rec->deserialize(log_buf);
                 std::string tab_name(log_rec->table_name_, log_rec->table_name_size_);
-                                if (!sm_manager_->get_db()->is_table(tab_name)) {
+                if (!sm_manager_->get_db()->is_table(tab_name)) {
                     continue;
                 }
                 // auto page_handle = sm_manager_->fhs_.at(tab_name)->fetch_page_handle(log_rec->rid_.page_no);

@@ -154,19 +154,21 @@ void SmManager::close_db() {
  */
 void SmManager::show_tables(Context* context) {
     std::fstream outfile;
-    outfile.open("output.txt", std::ios::out | std::ios::app);
-    outfile << "| Tables |\n";
-    RecordPrinter printer(1);
-    printer.print_separator(context);
-    printer.print_record({"Tables"}, context);
-    printer.print_separator(context);
-    for (auto& entry : db_.tabs_) {
-        auto& tab = entry.second;
-        printer.print_record({tab.name}, context);
-        outfile << "| " << tab.name << " |\n";
+    if (is_need_output) {
+        outfile.open("output.txt", std::ios::out | std::ios::app);
+        outfile << "| Tables |\n";
+        RecordPrinter printer(1);
+        printer.print_separator(context);
+        printer.print_record({"Tables"}, context);
+        printer.print_separator(context);
+        for (auto& entry : db_.tabs_) {
+            auto& tab = entry.second;
+            printer.print_record({tab.name}, context);
+            outfile << "| " << tab.name << " |\n";
+        }
+        printer.print_separator(context);
+        outfile.close();
     }
-    printer.print_separator(context);
-    outfile.close();
 }
 
 /**
@@ -355,20 +357,22 @@ void SmManager::drop_index(const std::string& tab_name, const std::vector<ColMet
  */
 void SmManager::show_index(const std::string& tab_name, Context* context) {
     TabMeta& tab_meta = db_.get_table(tab_name);
-    std::fstream outfile;
-    outfile.open("output.txt", std::ios::out | std::ios::app);
-    RecordPrinter printer(3);
-    printer.print_separator(context);
-    for (auto& entry : tab_meta.indexes) {
-        std::string all_columns = entry.GetAllColumnsString();
-        std::vector<std::string> index_info = {entry.tab_name, "unique", all_columns};
-        printer.print_record(index_info, context);
-        outfile << "| " << entry.tab_name << " | "
-                << "unique"
-                << " | " << all_columns << " |\n";
+    if (is_need_output) {
+        std::fstream outfile;
+        outfile.open("output.txt", std::ios::out | std::ios::app);
+        RecordPrinter printer(3);
+        printer.print_separator(context);
+        for (auto& entry : tab_meta.indexes) {
+            std::string all_columns = entry.GetAllColumnsString();
+            std::vector<std::string> index_info = {entry.tab_name, "unique", all_columns};
+            printer.print_record(index_info, context);
+            outfile << "| " << entry.tab_name << " | "
+                    << "unique"
+                    << " | " << all_columns << " |\n";
+        }
+        printer.print_separator(context);
+        outfile.close();
     }
-    printer.print_separator(context);
-    outfile.close();
 }
 
 void SmManager::rollback_insert(const std::string& tab_name, const Rid& rid, Context* context) {

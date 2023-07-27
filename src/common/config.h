@@ -22,7 +22,7 @@ extern std::chrono::milliseconds cycle_detection_interval;
 /** True if logging should be enabled, false otherwise. */
 extern std::atomic<bool> enable_logging;
 
-extern bool is_with_txn;
+extern bool is_need_output;
 
 /** If ENABLE_LOGGING is true, the log should be flushed to disk every LOG_TIMEOUT. */
 extern std::chrono::duration<int64_t> log_timeout;

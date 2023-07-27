@@ -30,7 +30,6 @@ See the Mulan PSL v2 for more details. */
 #define MAX_CONN_LIMIT 8
 
 static bool should_exit = false;
-static bool need_output = true;
 
 // 构建全局所需的管理器对象
 auto disk_manager = std::make_unique<DiskManager>();
@@ -114,8 +113,7 @@ void *client_handler(void *sock_fd) {
             exit(1);
         }
         if (strcmp(data_recv, "set output_file off") == 0) {
-            std::cout << "Server crash" << std::endl;
-            exit(1);
+            is_need_output = false;
         }
 
         std::cout << "Read from client " << fd << ": " << data_recv << std::endl;
@@ -158,25 +156,28 @@ void *client_handler(void *sock_fd) {
             // 回滚事务
             txn_manager->abort(context->txn_, log_manager.get());
             std::cout << e.GetInfo() << std::endl;
-
-            std::fstream outfile;
-            outfile.open("output.txt", std::ios::out | std::ios::app);
-            outfile << str;
-            outfile.close();
+            if (is_need_output) {
+                std::fstream outfile;
+                outfile.open("output.txt", std::ios::out | std::ios::app);
+                outfile << str;
+                outfile.close();
+            }
         } catch (RMDBError &e) {
-            // 遇到异常，需要打印failure到output.txt文件中，并发异常信息返回给客户端
-            std::cerr << e.what() << std::endl;
+            if (is_need_output) {
+                // 遇到异常，需要打印failure到output.txt文件中，并发异常信息返回给客户端
+                std::cerr << e.what() << std::endl;
 
-            memcpy(data_send, e.what(), e.get_msg_len());
-            data_send[e.get_msg_len()] = '\n';
-            data_send[e.get_msg_len() + 1] = '\0';
-            offset = e.get_msg_len() + 1;
+                memcpy(data_send, e.what(), e.get_msg_len());
+                data_send[e.get_msg_len()] = '\n';
+                data_send[e.get_msg_len() + 1] = '\0';
+                offset = e.get_msg_len() + 1;
 
-            // 将报错信息写入output.txt
-            std::fstream outfile;
-            outfile.open("output.txt", std::ios::out | std::ios::app);
-            outfile << "failure\n";
-            outfile.close();
+                // 将报错信息写入output.txt
+                std::fstream outfile;
+                outfile.open("output.txt", std::ios::out | std::ios::app);
+                outfile << "failure\n";
+                outfile.close();
+            }
         }
         if (finish_analyze == false) {
             yy_delete_buffer(buf);

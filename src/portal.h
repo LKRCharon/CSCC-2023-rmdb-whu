@@ -159,9 +159,7 @@ class Portal {
                 ql->run_load_data(portal->plan, context);
                 break;
             }
-            default: {
-                throw InternalError("Unexpected field type");
-            }
+            default: { throw InternalError("Unexpected field type"); }
         }
     }
 
@@ -185,18 +183,8 @@ class Portal {
             std::unique_ptr<AbstractExecutor> left = convert_plan_executor(x->left_, context);
             std::unique_ptr<AbstractExecutor> right = convert_plan_executor(x->right_, context);
             // FixMe: 某些情况还是需要用NNLJ 待修改
-            std::unique_ptr<AbstractExecutor> join;
-            // if(use_naive_blockjoin){}
-            // if (is_with_txn) {
-            //     join = std::make_unique<NaiveNestedLoopJoinExecutor>(std::move(left), std::move(right),
-            //                                                          std::move(x->conds_));
-            //     // left->get_conds();
-            // } else {
-            join = std::make_unique<NestedLoopJoinExecutor>(std::move(left), std::move(right), std::move(x->conds_));
-            // join =
-            //     std::make_unique<NestedLoopJoinExecutorNoPush>(std::move(left), std::move(right),
-            //     std::move(x->conds_));
-            // }
+            std::unique_ptr<AbstractExecutor> join =
+                std::make_unique<NestedLoopJoinExecutor>(std::move(left), std::move(right), std::move(x->conds_));
             return join;
         } else if (auto x = std::dynamic_pointer_cast<SortPlan>(plan)) {
             return std::make_unique<SortExecutor>(convert_plan_executor(x->subplan_, context), x->sel_col_, x->is_desc_,
