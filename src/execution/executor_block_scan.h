@@ -145,7 +145,8 @@ class BlockScanner {
             }
             slot_no_ = -1;
             position_++;
-            if (position_ == bbm_->getSize()) {
+            // 如果是空表，bbm的size就会是0，先判断一下
+            if (position_ == bbm_->getSize() || bbm_->getSize() == 0) {
                 is_buffer_end = true;
                 break;
             }
