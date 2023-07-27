@@ -260,7 +260,10 @@ void SmManager::drop_table(const std::string& tab_name, Context* context) {
  * @param {Context*} context
  */
 void SmManager::create_index(const std::string& tab_name, const std::vector<std::string>& col_names, Context* context) {
-    // context->lock_mgr_->lock_shared_on_table(context->txn_, fhs_.at(tab_name)->GetFd());
+    if (!db_.is_table(tab_name)) {
+        throw TableNotFoundError(tab_name);
+    }
+    context->lock_mgr_->lock_shared_on_table(context->txn_, fhs_.at(tab_name)->GetFd());
 
     TabMeta& tab_meta = db_.get_table(tab_name);
     if (tab_meta.is_index(col_names)) {
@@ -293,7 +296,8 @@ void SmManager::create_index(const std::string& tab_name, const std::vector<std:
             memcpy(key + offset, rec->data + col.offset, col.len);
             offset += col.len;
         }
-        int is_insert = index_handle->insert_entry(key, scanner.rid(), context->txn_);
+        index_handle->insert_entry(key, scanner.rid(), context->txn_);
+        delete[] key;
     }
 
     auto index_name = ix_manager_->get_index_name(tab_name, index_cols);
@@ -311,7 +315,10 @@ void SmManager::create_index(const std::string& tab_name, const std::vector<std:
  * @param {Context*} context
  */
 void SmManager::drop_index(const std::string& tab_name, const std::vector<std::string>& col_names, Context* context) {
-    // context->lock_mgr_->lock_shared_on_table(context->txn_, fhs_.at(tab_name)->GetFd());
+    if (!db_.is_table(tab_name)) {
+        throw TableNotFoundError(tab_name);
+    }
+    context->lock_mgr_->lock_shared_on_table(context->txn_, fhs_.at(tab_name)->GetFd());
 
     TabMeta& tab_meta = db_.get_table(tab_name);
     if (!tab_meta.is_index(col_names)) {
