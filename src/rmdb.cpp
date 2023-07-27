@@ -14,7 +14,9 @@ See the Mulan PSL v2 for more details. */
 #include <setjmp.h>
 #include <signal.h>
 #include <unistd.h>
+
 #include <atomic>
+
 #include "analyze/analyze.h"
 #include "common/config.h"
 #include "errors.h"
@@ -297,7 +299,7 @@ int main(int argc, char **argv) {
         }
         // Open database
         sm_manager->open_db(db_name);
-        // sm_manager->reset_db();
+        sm_manager->reset_db();
         // recovery database
         recovery->analyze();
         recovery->redo();
